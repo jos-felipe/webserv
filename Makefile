@@ -6,7 +6,7 @@
 #    By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/03/24 12:00:00 by josfelip          #+#    #+#              #
-#    Updated: 2025/03/26 11:40:28 by josfelip         ###   ########.fr        #
+#    Updated: 2025/03/26 11:44:35 by josfelip         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -69,7 +69,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 
 clean:
 	@echo "$(BLUE)Removing object files...$(RESET)"
-	@rm -rf $(OBJ_DIR)
+	@rm -rf $(OBJ_DIR) $(OBJ_DIR)_debug
 	@echo "$(GREEN)Object files removed!$(RESET)"
 
 fclean: clean
