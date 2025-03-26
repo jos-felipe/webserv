@@ -1,0 +1,87 @@
+name: WebServ CI
+
+on:
+  push:
+    branches: [ main, master, dev ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential g++
+    
+    - name: Create directory structure
+      run: |
+        mkdir -p src/config
+        mkdir -p src/http
+        mkdir -p src/socket
+        mkdir -p src/server
+        mkdir -p src/cgi
+        mkdir -p src/utils
+        mkdir -p include
+        touch src/main.cpp
+    
+    - name: Build project
+      run: make
+    
+    - name: Verify executable
+      run: |
+        if [ ! -f "webserv" ]; then
+          echo "Build failed to produce executable"
+          exit 1
+        fi
+        echo "Successfully built webserv executable"
+    
+    - name: Test for relinking
+      run: |
+        # Save the timestamp of the executable
+        TIMESTAMP_BEFORE=$(stat -c %Y webserv)
+        
+        # Run make again without changing any files
+        make
+        
+        # Get new timestamp
+        TIMESTAMP_AFTER=$(stat -c %Y webserv)
+        
+        # Compare timestamps
+        if [ "$TIMESTAMP_BEFORE" != "$TIMESTAMP_AFTER" ]; then
+          echo "ERROR: Makefile is relinking without changes!"
+          exit 1
+        else
+          echo "SUCCESS: No relinking detected."
+        fi
+    
+    # Uncomment when you have tests ready
+    # - name: Run tests
+    #   run: make test
+
+  code-style:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      
+    - name: Check file headers
+      run: |
+        missing_headers=0
+        for file in $(find . -name "*.cpp" -o -name "*.hpp"); do
+          if ! head -15 "$file" | grep -q "By: josfelip <josfelip@student.42sp.org.br>"; then
+            echo "Missing or incorrect 42 header in $file"
+            missing_headers=1
+          fi
+        done
+        
+        if [ $missing_headers -eq 1 ]; then
+          echo "Some files are missing the 42 header"
+          exit 1
+        fi
