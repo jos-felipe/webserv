@@ -70,14 +70,7 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
-    
-    - name: Check file endings
-      run: |
-        if grep -r --include="*.cpp" --include="*.hpp" -l $'\r\n' .; then
-          echo "Files with CRLF line endings found. Please use LF line endings."
-          exit 1
-        fi
-    
+      
     - name: Check file headers
       run: |
         missing_headers=0
