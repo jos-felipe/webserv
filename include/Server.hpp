@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:45:21 by josfelip          #+#    #+#             */
-/*   Updated: 2025/03/26 12:45:21 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/03/27 12:21:16 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@
 class Server
 {
 private:
-	const Config&				_config;
+	const Config*				_config;  // Changed to pointer to allow default constructor
 	std::vector<Socket>			_listenSockets;
 	std::map<int, Socket>		_clientSockets;
 	std::map<int, HttpRequest>	_requests;
@@ -67,8 +67,23 @@ private:
 	 * Check for and remove timed out connections
 	 */
 	void			checkTimeouts(void);
+	
+	/**
+	 * Copy constructor - private to prevent copying
+	 */
+	Server(const Server& other);
+	
+	/**
+	 * Assignment operator - private to prevent assignment
+	 */
+	Server&			operator=(const Server& other);
 
 public:
+	/**
+	 * Default constructor
+	 */
+	Server(void);
+	
 	/**
 	 * Constructor with configuration
 	 */
