@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:35:21 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/01 10:35:11 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/01 16:44:03 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 # include "Socket.hpp"
 # include "Config.hpp"
 # include "HttpResponse.hpp"
+# include "FileHandler.hpp"
 
 /**
  * @enum ParseState
@@ -89,6 +90,26 @@ private:
 	 * Find the location configuration for this request
 	 */
 	const LocationConfig*				findLocation(const ServerConfig& server) const;
+	
+	/**
+     * Handle GET request for static files
+     */
+    HttpResponse handleStaticFile(const LocationConfig& location,
+		const ServerConfig& server,
+		const Config& config);
+
+	/**
+	* Handle directory listing
+	*/
+	HttpResponse handleDirectoryListing(const std::string& dirPath,
+			const std::string& requestPath,
+			const LocationConfig& location);
+
+	/**
+	* Check if the file is an index file
+	*/
+	bool isIndex(const std::string& path, const LocationConfig& location,
+	FileHandler& fileHandler);
 
 public:
 	/**

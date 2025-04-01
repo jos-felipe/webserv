@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:50:42 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/01 10:37:08 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/01 16:51:50 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -313,71 +313,83 @@ bool	HttpRequest::parseChunkedData(void)
  */
 HttpResponse	HttpRequest::process(const Config& config)
 {
-	HttpResponse response;
-	
-	// Extract host and port from Host header
-	std::string host = getHeader("Host");
-	int port = 80;  // Default
-	
-	size_t colonPos = host.find(':');
-	if (colonPos != std::string::npos)
-	{
-		port = atoi(host.substr(colonPos + 1).c_str());
-		host = host.substr(0, colonPos);
-	}
-	
-	// Find the appropriate server configuration
-	const ServerConfig* server = config.findServer(host, port, host);
-	
-	if (!server)
-	{
-		response.setStatus(404);
-		response.setBody(config.getDefaultErrorPage(404));
-		return response;
-	}
-	
-	// Find the appropriate location configuration
-	const LocationConfig* location = findLocation(*server);
-	
-	if (!location)
-	{
-		response.setStatus(404);
-		response.setBody(config.getDefaultErrorPage(404));
-		return response;
-	}
-	
-	// Check if method is allowed
-	if (!location->allowedMethods.empty() && 
-		location->allowedMethods.find(_method) == location->allowedMethods.end())
-	{
-		response.setStatus(405);
-		response.setBody(config.getDefaultErrorPage(405));
-		return response;
-	}
-	
-	// Handle redirections
-	if (!location->redirect.empty())
-	{
-		response.setStatus(301);
-		response.addHeader("Location", location->redirect);
-		return response;
-	}
-	
-	// TODO: Implement actual request handling logic:
-	// - Static file serving
-	// - Directory listing
-	// - CGI execution
-	// - File uploads
-	
-	// For now, just return a simple success response
-	response.setStatus(200);
-	response.setBody("<html><body><h1>Hello from WebServ!</h1></body></html>");
-	response.addHeader("Content-Type", "text/html");
-	
-	return response;
+    HttpResponse response;
+    
+    // Extract host and port from Host header
+    std::string host = getHeader("Host");
+    int port = 80;  // Default
+    
+    size_t colonPos = host.find(':');
+    if (colonPos != std::string::npos)
+    {
+        port = atoi(host.substr(colonPos + 1).c_str());
+        host = host.substr(0, colonPos);
+    }
+    
+    // Find the appropriate server configuration
+    const ServerConfig* server = config.findServer(host, port, host);
+    
+    if (!server)
+    {
+        response.setStatus(404);
+        response.setBody(config.getDefaultErrorPage(404));
+        return response;
+    }
+    
+    // Find the appropriate location configuration
+    const LocationConfig* location = findLocation(*server);
+    
+    if (!location)
+    {
+        response.setStatus(404);
+        response.setBody(config.getDefaultErrorPage(404));
+        return response;
+    }
+    
+    // Check if method is allowed
+    if (!location->allowedMethods.empty() && 
+        location->allowedMethods.find(_method) == location->allowedMethods.end())
+    {
+        response.setStatus(405);
+        response.setBody(config.getDefaultErrorPage(405));
+        return response;
+    }
+    
+    // Handle redirections
+    if (!location->redirect.empty())
+    {
+        response.setStatus(301);
+        response.addHeader("Location", location->redirect);
+        return response;
+    }
+    
+    // Handle different HTTP methods
+    if (_method == "GET")
+    {
+        return handleStaticFile(*location, *server, config);
+    }
+    else if (_method == "POST")
+    {
+        // TODO: Implement POST handling
+        response.setStatus(501);  // Not Implemented
+        response.setBody(config.getDefaultErrorPage(501));
+    }
+    else if (_method == "DELETE")
+    {
+        // TODO: Implement DELETE handling
+        response.setStatus(501);  // Not Implemented
+        response.setBody(config.getDefaultErrorPage(501));
+    }
+    else
+    {
+        response.setStatus(405);  // Method Not Allowed
+        response.setBody(config.getDefaultErrorPage(405));
+    }
+    
+    return response;
 }
 
-/**
+ /**
  * Find the location configuration for this request
  */
 const LocationConfig*	HttpRequest::findLocation(const ServerConfig& server) const
