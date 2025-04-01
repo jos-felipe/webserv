@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/03/27 13:25:52 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/01 10:48:37 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,8 @@
 #include <sys/select.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <cerrno>
+#include <cstring>
 
 /**
  * Default constructor initializes an empty server
