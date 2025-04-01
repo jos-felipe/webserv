@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+webserv
+debugme
+
+# Local environment files
+.vscode
+*.pdf
