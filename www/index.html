@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebServ Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        header {
+            background-color: #4a90e2;
+            color: white;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        h1 {
+            margin: 0;
+        }
+        section {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .feature-box {
+            background-color: #e9f7ff;
+            border-left: 5px solid #4a90e2;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        footer {
+            text-align: center;
+            color: #777;
+            margin-top: 40px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+        button {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #3a80d2;
+        }
+        #response {
+            height: 30px;
+            font-weight: bold;
+            color: #4a90e2;
+        }
+        .image-placeholder {
+            background-color: #ddd;
+            width: 200px;
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>WebServ Test Page</h1>
+        <p>This page helps test your static file serving implementation</p>
+    </header>
+
+    <section>
+        <h2>Welcome to Your HTTP Server</h2>
+        <p>If you can see this page, your static file serving functionality is working correctly!</p>
+        
+        <div class="feature-box">
+            <h3>Features Being Tested:</h3>
+            <ul>
+                <li>Basic HTML rendering</li>
+                <li>CSS styling (inline in this document)</li>
+                <li>JavaScript functionality</li>
+                <li>Proper Content-Type headers (should be text/html)</li>
+                <li>Directory structure navigation</li>
+            </ul>
+        </div>
+    </section>
+
+    <section>
+        <h2>Interactive Test</h2>
+        <p>Click the button below to test JavaScript functionality:</p>
+        <button id="testButton">Test JavaScript</button>
+        <div id="response"></div>
+    </section>
+
+    <section>
+        <h2>Directory Navigation Test</h2>
+        <p>Test your server's ability to navigate directories:</p>
+        <ul>
+            <li><a href="/">Root Directory</a></li>
+            <li><a href="/css/">CSS Directory (create this)</a></li>
+            <li><a href="/images/">Images Directory (create this)</a></li>
+            <li><a href="/nonexistent/">Nonexistent Directory (should 404)</a></li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Image Placeholder</h2>
+        <p>Create an images directory with a test.jpg file to see an actual image here:</p>
+        <div class="image-placeholder">Image Placeholder</div>
+        <p>Real image should be at: <a href="/images/test.jpg">/images/test.jpg</a></p>
+    </section>
+
+    <footer>
+        <p>WebServ HTTP Server Test Page &copy; 2025</p>
+    </footer>
+
+    <script>
+        // Simple JavaScript to test client-side functionality
+        document.getElementById('testButton').addEventListener('click', function() {
+            const response = document.getElementById('response');
+            response.textContent = 'JavaScript is working correctly! ' + new Date().toLocaleTimeString();
+        });
+    </script>
+</body>
+</html>
