@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 14:20:15 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/01 10:40:51 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/01 10:54:04 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,8 +125,11 @@ void	HttpResponse::generateRawResponse(void)
 		_headers["Date"] = getFormattedDate();
 		
 	if (_headers.find("Content-Length") == _headers.end())
-		_headers["Content-Length"] = static_cast<std::ostringstream&>(
-			std::ostringstream() << _body.length()).str();
+	{
+		std::ostringstream oss;
+		oss << _body.length();
+		_headers["Content-Length"] = oss.str();
+	}
 			
 	if (_headers.find("Connection") == _headers.end())
 		_headers["Connection"] = _keepAlive ? "keep-alive" : "close";
