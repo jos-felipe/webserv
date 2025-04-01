@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/02 09:00:00 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/01 16:46:19 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/01 17:11:18 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,8 @@ HttpResponse HttpRequest::handleStaticFile(const LocationConfig& location,
                                     const ServerConfig& server,
                                     const Config& config)
 {
-    HttpResponse response;
+    (void)server;
+	HttpResponse response;
     FileHandler fileHandler;
     
     // Map the request path to a filesystem path
