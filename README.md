@@ -113,8 +113,8 @@ server {
 
 ## 📋 Development Progress
 - [x] Project setup and repository initialization
-- [ ] Configuration file parsing
-- [ ] Socket management and non-blocking I/O
+- [x] Configuration file parsing
+- [x] Socket management and non-blocking I/O
 - [ ] HTTP request parsing
 - [ ] HTTP response generation
 - [ ] Static file serving
