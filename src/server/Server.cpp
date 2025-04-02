@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/02 15:02:58 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/02 17:09:36 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,7 +108,7 @@ void	Server::initializeSockets(void)
 }
 
 /**
- * Accept 	new client connections on listening sockets
+ * Accept new client connections on listening sockets
  */
 void Server::acceptConnections(void)
 {
@@ -216,11 +216,26 @@ void	Server::sendResponses(void)
 	{
 		int clientFd = it->first;
 		
+		// Validate file descriptor before using it
+		if (clientFd < 0 || clientFd >= FD_SETSIZE) {
+			std::cerr << "Error: Invalid file descriptor " << clientFd << std::endl;
+			toRemove.push_back(clientFd);
+			continue;
+		}
+		
 		if (FD_ISSET(clientFd, &_writeFds))
 		{
 			try
 			{
 				HttpResponse& response = it->second;
+				
+				// Check if client socket exists before accessing it
+				if (_clientSockets.find(clientFd) == _clientSockets.end()) {
+					std::cerr << "Error: Client socket not found for fd " 
+						<< clientFd << std::endl;
+					toRemove.push_back(clientFd);
+					continue;
+				}
 				
 				if (response.send(_clientSockets[clientFd]))
 				{
@@ -302,6 +317,12 @@ void	Server::run(void)
 			std::cerr << "Select error: " << strerror(errno) << std::endl;
 		return;
 	}
+	
+	// Updated to use the modified fd sets from select
+	// This is a critical fix to avoid checking the wrong file descriptors
+	_readFds = readFdsCopy;
+	_writeFds = writeFdsCopy;
+	_errorFds = errorFdsCopy;
 	
 	// Process I/O events
 	acceptConnections();
