@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/02 15:02:58 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/02 20:54:11 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,7 +108,7 @@ void	Server::initializeSockets(void)
 }
 
 /**
- * Accept 	new client connections on listening sockets
+ * Accept new client connections on listening sockets
  */
 void Server::acceptConnections(void)
 {
@@ -119,6 +119,9 @@ void Server::acceptConnections(void)
         
         if (FD_ISSET(listenFd, &_readFds))
         {
+            std::cout << "DEBUG: Listen socket " << listenFd 
+                << " is ready for accepting" << std::endl;
+                
             try
             {
                 Socket clientSocket = it->accept();
@@ -164,20 +167,35 @@ void	Server::handleRequests(void)
 		
 		if (FD_ISSET(clientFd, &_readFds))
 		{
+		    std::cout << "DEBUG: Client socket " << clientFd 
+                << " is ready for reading" << std::endl;
+                
 			try
 			{
 				if (!_requests.count(clientFd))
+				{
+				    std::cout << "DEBUG: Creating new request for fd " 
+                        << clientFd << std::endl;
 					_requests[clientFd] = HttpRequest();
+				}
 					
 				HttpRequest& request = _requests[clientFd];
 				
-				if (request.read(it->second))
+				bool requestComplete = request.read(it->second);
+				std::cout << "DEBUG: Request read returned: " 
+                    << (requestComplete ? "COMPLETE" : "INCOMPLETE") << std::endl;
+				
+				if (requestComplete)
 				{
 					// Request is complete, process it
+					std::cout << "DEBUG: Processing request and generating response" 
+                        << std::endl;
 					HttpResponse response = request.process(*_config);
 					_responses[clientFd] = response;
 					
 					// Switch to writing mode
+					std::cout << "DEBUG: Switching socket " << clientFd 
+                        << " to write mode" << std::endl;
 					FD_CLR(clientFd, &_readFds);
 					FD_SET(clientFd, &_writeFds);
 				}
@@ -204,64 +222,115 @@ void	Server::handleRequests(void)
 	}
 }
 
+
 /**
  * Send responses to clients with ready write descriptors
  */
-void	Server::sendResponses(void)
+void Server::sendResponses(void)
 {
-	std::vector<int> toRemove;
-	
-	for (std::map<int, HttpResponse>::iterator it = _responses.begin();
-		it != _responses.end(); ++it)
-	{
-		int clientFd = it->first;
-		
-		if (FD_ISSET(clientFd, &_writeFds))
-		{
-			try
-			{
-				HttpResponse& response = it->second;
-				
-				if (response.send(_clientSockets[clientFd]))
-				{
-					// Response fully sent, either keep-alive or close
-					if (response.shouldKeepAlive())
-					{
-						// Reset for new request
-						_requests.erase(clientFd);
-						_responses.erase(clientFd);
-						FD_CLR(clientFd, &_writeFds);
-						FD_SET(clientFd, &_readFds);
-					}
-					else
-					{
-						toRemove.push_back(clientFd);
-					}
-				}
-			}
-			catch (const std::exception& e)
-			{
-				std::cerr << "Error sending response on fd " << clientFd 
-					<< ": " << e.what() << std::endl;
-				toRemove.push_back(clientFd);
-			}
-		}
-	}
-	
-	// Clean up connections we're done with
-	for (std::vector<int>::iterator it = toRemove.begin();
-		it != toRemove.end(); ++it)
-	{
-		FD_CLR(*it, &_readFds);
-		FD_CLR(*it, &_writeFds);
-		_clientSockets.erase(*it);
-		_requests.erase(*it);
-		_responses.erase(*it);
-		close(*it);
-		std::cout << "Connection closed: fd " << *it << std::endl;
-	}
+    std::cout << "DEBUG: Checking for sockets ready to write" << std::endl;
+    
+    std::vector<int> toRemove;
+    std::vector<int> toKeepAlive;  // New vector to track connections to keep alive
+    
+    for (std::map<int, HttpResponse>::iterator it = _responses.begin();
+        it != _responses.end(); ++it)
+    {
+        int clientFd = it->first;
+        
+        // Validate file descriptor before using it
+        if (clientFd < 0 || clientFd >= FD_SETSIZE) {
+            std::cerr << "Error: Invalid file descriptor " << clientFd << std::endl;
+            toRemove.push_back(clientFd);
+            continue;
+        }
+        
+        std::cout << "DEBUG: Checking if socket " << clientFd 
+            << " is ready for writing: " 
+            << (FD_ISSET(clientFd, &_writeFds) ? "YES" : "NO") << std::endl;
+            
+        if (FD_ISSET(clientFd, &_writeFds))
+        {
+            try
+            {
+                HttpResponse& response = it->second;
+                
+                // Check if client socket exists before accessing it
+                if (_clientSockets.find(clientFd) == _clientSockets.end()) {
+                    std::cerr << "Error: Client socket not found for fd " 
+                        << clientFd << std::endl;
+                    toRemove.push_back(clientFd);
+                    continue;
+                }
+                
+                std::cout << "DEBUG: Attempting to send response on fd " 
+                    << clientFd << std::endl;
+                    
+                if (response.send(_clientSockets[clientFd]))
+                {
+                    // Response fully sent, either keep-alive or close
+                    std::cout << "DEBUG: Response fully sent on fd " 
+                        << clientFd << std::endl;
+                        
+                    if (response.shouldKeepAlive())
+                    {
+                        // Mark for keep-alive processing AFTER we finish iterating
+                        std::cout << "DEBUG: Marking connection for keep-alive: " 
+                            << clientFd << std::endl;
+                        toKeepAlive.push_back(clientFd);
+                    }
+                    else
+                    {
+                        std::cout << "DEBUG: Connection will be closed" << std::endl;
+                        toRemove.push_back(clientFd);
+                    }
+                }
+                else
+                {
+                    std::cout << "DEBUG: Response not fully sent yet, "
+                        << "will try again later" << std::endl;
+                }
+            }
+            catch (const std::exception& e)
+            {
+                std::cerr << "Error sending response on fd " << clientFd 
+                    << ": " << e.what() << std::endl;
+                toRemove.push_back(clientFd);
+            }
+        }
+    }
+    
+    // Process keep-alive connections AFTER iteration is complete
+    for (std::vector<int>::iterator it = toKeepAlive.begin();
+         it != toKeepAlive.end(); ++it)
+    {
+        int clientFd = *it;
+        std::cout << "DEBUG: Keeping connection alive, "
+            << "switching " << clientFd << " back to read mode" << std::endl;
+        
+        // Reset for new request
+        _requests.erase(clientFd);
+        _responses.erase(clientFd);
+        FD_CLR(clientFd, &_writeFds);
+        FD_SET(clientFd, &_readFds);
+    }
+    
+    // Clean up connections we're done with
+    for (std::vector<int>::iterator it = toRemove.begin();
+        it != toRemove.end(); ++it)
+    {
+        int clientFd = *it;
+        std::cout << "DEBUG: Closing connection: " << clientFd << std::endl;
+        
+        FD_CLR(clientFd, &_readFds);
+        FD_CLR(clientFd, &_writeFds);
+        _clientSockets.erase(clientFd);
+        _requests.erase(clientFd);
+        _responses.erase(clientFd);
+        close(clientFd);
+        std::cout << "Connection closed: fd " << clientFd << std::endl;
+    }
 }
-
 /**
  * Check for and remove idle connections that have timed out
  */
@@ -285,29 +354,52 @@ void	Server::start(void)
  */
 void	Server::run(void)
 {
-	fd_set readFdsCopy = _readFds;
-	fd_set writeFdsCopy = _writeFds;
-	fd_set errorFdsCopy = _errorFds;
-	
-	struct timeval timeout;
-	timeout.tv_sec = 1;
-	timeout.tv_usec = 0;
-	
-	int activity = select(_maxFd + 1, &readFdsCopy, &writeFdsCopy, 
-		&errorFdsCopy, &timeout);
-	
-	if (activity < 0)
-	{
-		if (errno != EINTR) // Ignore if interrupted by signal
-			std::cerr << "Select error: " << strerror(errno) << std::endl;
-		return;
-	}
-	
-	// Process I/O events
-	acceptConnections();
-	handleRequests();
-	sendResponses();
-	checkTimeouts();
+    // Create temporary copies for select() to modify
+    fd_set readFdsCopy;
+    fd_set writeFdsCopy;
+    fd_set errorFdsCopy;
+    
+    // Copy the master sets to the temporary sets
+    readFdsCopy = _readFds;
+    writeFdsCopy = _writeFds;
+    errorFdsCopy = _errorFds;
+    
+    // Show which file descriptors we're monitoring
+    std::cout << "DEBUG: select() monitoring " << _maxFd + 1 
+        << " file descriptors" << std::endl;
+    
+    struct timeval timeout;
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+    
+    int activity = select(_maxFd + 1, &readFdsCopy, &writeFdsCopy, 
+        &errorFdsCopy, &timeout);
+    
+    if (activity < 0)
+    {
+        if (errno != EINTR) // Ignore if interrupted by signal
+            std::cerr << "Select error: " << strerror(errno) << std::endl;
+        return;
+    }
+    else if (activity == 0) 
+    {
+        // Timeout occurred, no activity
+        return;
+    }
+    
+    std::cout << "DEBUG: select() returned " << activity 
+        << " ready file descriptors" << std::endl;
+    
+    // Use the copied fd_sets which select() modified
+    _readFds = readFdsCopy;
+    _writeFds = writeFdsCopy;
+    _errorFds = errorFdsCopy;
+    
+    // Process I/O events
+    acceptConnections();
+    handleRequests();
+    sendResponses();
+    checkTimeouts();
 }
 
 /**

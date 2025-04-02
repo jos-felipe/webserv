@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:20:34 by josfelip          #+#    #+#             */
-/*   Updated: 2025/03/31 23:23:58 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/02 21:05:12 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -318,38 +318,81 @@ const std::vector<ServerConfig>&	Config::getServers(void) const
 /**
  * Find server configuration by host, port and server name
  */
-const ServerConfig*	Config::findServer(const std::string& host, int port, 
-				const std::string& serverName) const
+const ServerConfig* Config::findServer(const std::string& host, int port, 
+	const std::string& serverName) const
 {
+	std::cout << "DEBUG: Finding server for host='" << host 
+	<< "', port=" << port << ", name='" << serverName << "'" << std::endl;
+
 	const ServerConfig* defaultServer = NULL;
-	
+
+	// Log all available servers for debugging
+	std::cout << "DEBUG: Total servers in config: " << _servers.size() << std::endl;
+
 	for (size_t i = 0; i < _servers.size(); i++)
 	{
-		const ServerConfig& server = _servers[i];
-		
-		// Check if host and port match
-		if (server.host == host && server.port == port)
-		{
-			// Check if server name matches
-			if (server.serverNames.empty())
-			{
-				if (!defaultServer)
-					defaultServer = &server;
-			}
-			else
-			{
-				for (size_t j = 0; j < server.serverNames.size(); j++)
-				{
-					if (server.serverNames[j] == serverName)
-						return &server;
-				}
-				
-				if (!defaultServer)
-					defaultServer = &server;
-			}
-		}
+	const ServerConfig& server = _servers[i];
+
+	std::cout << "DEBUG: Checking server #" << i << ": host='" << server.host 
+	<< "', port=" << server.port;
+
+	if (!server.serverNames.empty()) {
+	std::cout << ", names=[";
+	for (size_t j = 0; j < server.serverNames.size(); j++) {
+	if (j > 0) std::cout << ", ";
+	std::cout << "'" << server.serverNames[j] << "'";
 	}
-	
+	std::cout << "]";
+	}
+	std::cout << std::endl;
+
+	// Check for matching host & port
+	bool hostMatches = (server.host == host || server.host == "0.0.0.0");
+	bool portMatches = (server.port == port);
+
+	if (hostMatches && portMatches)
+	{
+	std::cout << "DEBUG: Found matching host/port" << std::endl;
+
+	// Check if server name matches
+	if (server.serverNames.empty())
+	{
+	std::cout << "DEBUG: Server has no server_names, using as default" 
+	<< std::endl;
+	if (!defaultServer)
+	defaultServer = &server;
+	}
+	else
+	{
+	for (size_t j = 0; j < server.serverNames.size(); j++)
+	{
+	std::cout << "DEBUG: Comparing server_name '" 
+	<< server.serverNames[j] << "' with '" 
+	<< serverName << "'" << std::endl;
+
+	if (server.serverNames[j] == serverName)
+	{
+	std::cout << "DEBUG: Server name matches!" << std::endl;
+	return &server;
+	}
+	}
+
+	// No matching server name, but host/port match, so potential default
+	if (!defaultServer)
+	{
+	std::cout << "DEBUG: No matching server_name, " 
+	<< "but using as potential default" << std::endl;
+	defaultServer = &server;
+	}
+	}
+	}
+	}
+
+	if (defaultServer)
+	std::cout << "DEBUG: Returning default server for this host/port" << std::endl;
+	else
+	std::cout << "DEBUG: No matching server found!" << std::endl;
+
 	return defaultServer;
 }
 

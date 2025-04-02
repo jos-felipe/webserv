@@ -6,13 +6,16 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 14:20:15 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/01 10:54:04 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/02 20:38:52 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "HttpResponse.hpp"
 #include <sstream>
 #include <ctime>
+#include <iostream>
+#include <cstring>
+#include <cerrno>
 
 /**
  * Constructor initializes a default response
@@ -115,6 +118,9 @@ std::string	HttpResponse::getStatusText(int statusCode)
  */
 void	HttpResponse::generateRawResponse(void)
 {
+    std::cout << "DEBUG: Generating raw response for status " 
+        << _statusCode << std::endl;
+        
 	std::ostringstream oss;
 	
 	// Status line
@@ -126,9 +132,9 @@ void	HttpResponse::generateRawResponse(void)
 		
 	if (_headers.find("Content-Length") == _headers.end())
 	{
-		std::ostringstream oss;
-		oss << _body.length();
-		_headers["Content-Length"] = oss.str();
+		std::ostringstream lengthStr;
+		lengthStr << _body.length();
+		_headers["Content-Length"] = lengthStr.str();
 	}
 			
 	if (_headers.find("Connection") == _headers.end())
@@ -136,11 +142,17 @@ void	HttpResponse::generateRawResponse(void)
 		
 	if (_body.length() > 0 && _headers.find("Content-Type") == _headers.end())
 		_headers["Content-Type"] = "text/html";
+	
+	// Server header
+	if (_headers.find("Server") == _headers.end())
+	    _headers["Server"] = "WebServ/0.1";
 		
 	// Add all headers
 	for (std::map<std::string, std::string>::const_iterator it = _headers.begin();
 		it != _headers.end(); ++it)
 	{
+	    std::cout << "DEBUG: Adding header: " << it->first << ": " 
+	        << it->second << std::endl;
 		oss << it->first << ": " << it->second << "\r\n";
 	}
 	
@@ -148,9 +160,23 @@ void	HttpResponse::generateRawResponse(void)
 	oss << "\r\n";
 	
 	// Add body
-	oss << _body;
+	if (!_body.empty())
+	{
+	    std::cout << "DEBUG: Adding body of " << _body.length() 
+	        << " bytes" << std::endl;
+		oss << _body;
+	}
 	
 	_rawResponse = oss.str();
+	
+	// Debug output - show the first part of the response
+	std::string firstPart = _rawResponse.substr(0, std::min(_rawResponse.length(), 
+	    static_cast<size_t>(200)));
+	std::cout << "DEBUG: Raw response (" << _rawResponse.length() 
+	    << " bytes):\n" << firstPart;
+	if (_rawResponse.length() > 200)
+	    std::cout << "...";
+	std::cout << std::endl;
 }
 
 /**
@@ -173,6 +199,8 @@ void	HttpResponse::setStatus(int statusCode)
 {
 	_statusCode = statusCode;
 	_statusText = getStatusText(statusCode);
+	std::cout << "DEBUG: Response status set to " << _statusCode 
+	    << " " << _statusText << std::endl;
 }
 
 /**
@@ -180,6 +208,7 @@ void	HttpResponse::setStatus(int statusCode)
  */
 void	HttpResponse::addHeader(const std::string& name, const std::string& value)
 {
+    std::cout << "DEBUG: Adding header: " << name << ": " << value << std::endl;
 	_headers[name] = value;
 }
 
@@ -188,6 +217,8 @@ void	HttpResponse::addHeader(const std::string& name, const std::string& value)
  */
 void	HttpResponse::setBody(const std::string& body)
 {
+    std::cout << "DEBUG: Setting body with " << body.length() 
+        << " bytes" << std::endl;
 	_body = body;
 }
 
@@ -196,6 +227,8 @@ void	HttpResponse::setBody(const std::string& body)
  */
 void	HttpResponse::setKeepAlive(bool keepAlive)
 {
+    std::cout << "DEBUG: Setting keepAlive to " 
+        << (keepAlive ? "true" : "false") << std::endl;
 	_keepAlive = keepAlive;
 }
 
@@ -215,23 +248,42 @@ bool	HttpResponse::send(Socket& clientSocket)
 {
 	// Generate raw response if not already done
 	if (_rawResponse.empty())
+	{
+	    std::cout << "DEBUG: No raw response yet, generating now" << std::endl;
 		generateRawResponse();
+	}
 		
 	// Calculate remaining bytes to send
 	size_t remaining = _rawResponse.length() - _bytesSent;
 	
 	if (remaining == 0)
+	{
+	    std::cout << "DEBUG: No bytes remaining to send, response complete" << std::endl;
 		return true;
+	}
+	
+	std::cout << "DEBUG: Sending " << remaining << " remaining bytes" << std::endl;
 		
 	// Try to send the remaining data
 	ssize_t bytesSent = clientSocket.send(_rawResponse.c_str() + _bytesSent, 
 		remaining);
 		
 	if (bytesSent < 0)
-		throw std::runtime_error("Failed to send response");
-		
+	{
+	    std::cout << "DEBUG: Send failed with error: " 
+	        << strerror(errno) << std::endl;
+		throw std::runtime_error("Failed to send response: " + 
+		    std::string(strerror(errno)));
+	}
+	
+	std::cout << "DEBUG: Successfully sent " << bytesSent << " bytes" << std::endl;
 	_bytesSent += bytesSent;
 	
 	// Check if we've sent everything
-	return (_bytesSent == _rawResponse.length());
+	bool complete = (_bytesSent == _rawResponse.length());
+	std::cout << "DEBUG: Response sending is " 
+	    << (complete ? "complete" : "incomplete") 
+	    << " (" << _bytesSent << "/" << _rawResponse.length() << " bytes)" << std::endl;
+	
+	return complete;
 }
