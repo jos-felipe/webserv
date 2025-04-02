@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 14:40:18 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/02 14:10:59 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/02 15:06:04 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <cstring>
+#include <cerrno>
 #include <stdexcept>
 
 /*
@@ -136,16 +137,22 @@ void	Socket::SocketImpl::listen(int backlog)
 /**
  * Accept a new connection
  */
-int		Socket::SocketImpl::accept(struct sockaddr_in& clientAddr)
+int Socket::SocketImpl::accept(struct sockaddr_in& clientAddr)
 {
-	socklen_t clientLen = sizeof(clientAddr);
-	
-	int clientFd = ::accept(_fd, (struct sockaddr*)&clientAddr, &clientLen);
-	
-	if (clientFd < 0)
-		throw std::runtime_error("Failed to accept connection");
-		
-	return clientFd;
+    socklen_t clientLen = sizeof(clientAddr);
+    
+    int clientFd = ::accept(_fd, (struct sockaddr*)&clientAddr, &clientLen);
+    
+    if (clientFd < 0)
+    {
+        // For non-blocking sockets, these errors are normal and shouldn't cause exceptions
+        if (errno == EAGAIN || errno == EWOULDBLOCK)
+            return -1;
+            
+        throw std::runtime_error("Failed to accept connection: " + std::string(strerror(errno)));
+    }
+        
+    return clientFd;
 }
 
 /**
@@ -304,15 +311,22 @@ void	Socket::listen(int backlog)
 /**
  * Accept a new connection
  */
-Socket	Socket::accept(void)
+Socket Socket::accept(void)
 {
-	if (!_impl)
-		throw std::runtime_error("No socket implementation");
-		
-	struct sockaddr_in clientAddr;
-	int clientFd = _impl->accept(clientAddr);
-	
-	return Socket(clientFd, clientAddr);
+    if (!_impl)
+        throw std::runtime_error("No socket implementation");
+        
+    struct sockaddr_in clientAddr;
+    int clientFd = _impl->accept(clientAddr);
+    
+    // If no connection is waiting, return an invalid socket
+    if (clientFd < 0)
+    {
+        Socket invalid;
+        return invalid;
+    }
+    
+    return Socket(clientFd, clientAddr);
 }
 
 /**
