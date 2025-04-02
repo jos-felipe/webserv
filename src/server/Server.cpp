@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/01 10:48:37 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/02 15:02:58 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,8 +86,8 @@ void	Server::initializeSockets(void)
 			socket.listen();
 			
 			_listenSockets.push_back(socket);
-			
 			int fd = socket.getFd();
+			
 			FD_SET(fd, &_readFds);
 			
 			if (fd > _maxFd)
@@ -110,37 +110,41 @@ void	Server::initializeSockets(void)
 /**
  * Accept 	new client connections on listening sockets
  */
-void	Server::acceptConnections(void)
+void Server::acceptConnections(void)
 {
-	for (std::vector<Socket>::iterator it = _listenSockets.begin();
-		it != _listenSockets.end(); ++it)
-	{
-		int listenFd = it->getFd();
-		
-		if (FD_ISSET(listenFd, &_readFds))
-		{
-			try
-			{
-				Socket clientSocket = it->accept();
-				clientSocket.setNonBlocking();
-				
-				int clientFd = clientSocket.getFd();
-				_clientSockets[clientFd] = clientSocket;
-				
-				FD_SET(clientFd, &_readFds);
-				
-				if (clientFd > _maxFd)
-					_maxFd = clientFd;
-					
-				std::cout << "New connection accepted: fd " << clientFd << std::endl;
-			}
-			catch (const std::exception& e)
-			{
-				std::cerr << "Failed to accept connection: " 
-					<< e.what() << std::endl;
-			}
-		}
-	}
+    for (std::vector<Socket>::iterator it = _listenSockets.begin();
+        it != _listenSockets.end(); ++it)
+    {
+        int listenFd = it->getFd();
+        
+        if (FD_ISSET(listenFd, &_readFds))
+        {
+            try
+            {
+                Socket clientSocket = it->accept();
+                // Check if accept returned a valid socket
+                if (clientSocket.getFd() >= 0)
+                {
+                    clientSocket.setNonBlocking();
+                    
+                    int clientFd = clientSocket.getFd();
+                    _clientSockets[clientFd] = clientSocket;
+                    
+                    FD_SET(clientFd, &_readFds);
+                    
+                    if (clientFd > _maxFd)
+                        _maxFd = clientFd;
+                        
+                    std::cout << "New connection accepted: fd " << clientFd << std::endl;
+                }
+            }
+            catch (const std::exception& e)
+            {
+                std::cerr << "Failed to accept connection: " 
+                    << e.what() << std::endl;
+            }
+        }
+    }
 }
 
 /**
