@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/02 17:09:36 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/02 20:35:18 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,6 +119,9 @@ void Server::acceptConnections(void)
         
         if (FD_ISSET(listenFd, &_readFds))
         {
+            std::cout << "DEBUG: Listen socket " << listenFd 
+                << " is ready for accepting" << std::endl;
+                
             try
             {
                 Socket clientSocket = it->accept();
@@ -164,20 +167,35 @@ void	Server::handleRequests(void)
 		
 		if (FD_ISSET(clientFd, &_readFds))
 		{
+		    std::cout << "DEBUG: Client socket " << clientFd 
+                << " is ready for reading" << std::endl;
+                
 			try
 			{
 				if (!_requests.count(clientFd))
+				{
+				    std::cout << "DEBUG: Creating new request for fd " 
+                        << clientFd << std::endl;
 					_requests[clientFd] = HttpRequest();
+				}
 					
 				HttpRequest& request = _requests[clientFd];
 				
-				if (request.read(it->second))
+				bool requestComplete = request.read(it->second);
+				std::cout << "DEBUG: Request read returned: " 
+                    << (requestComplete ? "COMPLETE" : "INCOMPLETE") << std::endl;
+				
+				if (requestComplete)
 				{
 					// Request is complete, process it
+					std::cout << "DEBUG: Processing request and generating response" 
+                        << std::endl;
 					HttpResponse response = request.process(*_config);
 					_responses[clientFd] = response;
 					
 					// Switch to writing mode
+					std::cout << "DEBUG: Switching socket " << clientFd 
+                        << " to write mode" << std::endl;
 					FD_CLR(clientFd, &_readFds);
 					FD_SET(clientFd, &_writeFds);
 				}
@@ -209,6 +227,8 @@ void	Server::handleRequests(void)
  */
 void	Server::sendResponses(void)
 {
+    std::cout << "DEBUG: Checking for sockets ready to write" << std::endl;
+    
 	std::vector<int> toRemove;
 	
 	for (std::map<int, HttpResponse>::iterator it = _responses.begin();
@@ -223,6 +243,10 @@ void	Server::sendResponses(void)
 			continue;
 		}
 		
+		std::cout << "DEBUG: Checking if socket " << clientFd 
+            << " is ready for writing: " 
+            << (FD_ISSET(clientFd, &_writeFds) ? "YES" : "NO") << std::endl;
+            
 		if (FD_ISSET(clientFd, &_writeFds))
 		{
 			try
@@ -237,12 +261,20 @@ void	Server::sendResponses(void)
 					continue;
 				}
 				
+				std::cout << "DEBUG: Attempting to send response on fd " 
+                    << clientFd << std::endl;
+                    
 				if (response.send(_clientSockets[clientFd]))
 				{
 					// Response fully sent, either keep-alive or close
+					std::cout << "DEBUG: Response fully sent on fd " 
+                        << clientFd << std::endl;
+                        
 					if (response.shouldKeepAlive())
 					{
 						// Reset for new request
+						std::cout << "DEBUG: Keeping connection alive, "
+                            << "switching back to read mode" << std::endl;
 						_requests.erase(clientFd);
 						_responses.erase(clientFd);
 						FD_CLR(clientFd, &_writeFds);
@@ -250,8 +282,14 @@ void	Server::sendResponses(void)
 					}
 					else
 					{
+						std::cout << "DEBUG: Connection will be closed" << std::endl;
 						toRemove.push_back(clientFd);
 					}
+				}
+				else
+				{
+				    std::cout << "DEBUG: Response not fully sent yet, "
+                        << "will try again later" << std::endl;
 				}
 			}
 			catch (const std::exception& e)
@@ -300,35 +338,52 @@ void	Server::start(void)
  */
 void	Server::run(void)
 {
-	fd_set readFdsCopy = _readFds;
-	fd_set writeFdsCopy = _writeFds;
-	fd_set errorFdsCopy = _errorFds;
-	
-	struct timeval timeout;
-	timeout.tv_sec = 1;
-	timeout.tv_usec = 0;
-	
-	int activity = select(_maxFd + 1, &readFdsCopy, &writeFdsCopy, 
-		&errorFdsCopy, &timeout);
-	
-	if (activity < 0)
-	{
-		if (errno != EINTR) // Ignore if interrupted by signal
-			std::cerr << "Select error: " << strerror(errno) << std::endl;
-		return;
-	}
-	
-	// Updated to use the modified fd sets from select
-	// This is a critical fix to avoid checking the wrong file descriptors
-	_readFds = readFdsCopy;
-	_writeFds = writeFdsCopy;
-	_errorFds = errorFdsCopy;
-	
-	// Process I/O events
-	acceptConnections();
-	handleRequests();
-	sendResponses();
-	checkTimeouts();
+    // Create temporary copies for select() to modify
+    fd_set readFdsCopy;
+    fd_set writeFdsCopy;
+    fd_set errorFdsCopy;
+    
+    // Copy the master sets to the temporary sets
+    readFdsCopy = _readFds;
+    writeFdsCopy = _writeFds;
+    errorFdsCopy = _errorFds;
+    
+    // Show which file descriptors we're monitoring
+    std::cout << "DEBUG: select() monitoring " << _maxFd + 1 
+        << " file descriptors" << std::endl;
+    
+    struct timeval timeout;
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+    
+    int activity = select(_maxFd + 1, &readFdsCopy, &writeFdsCopy, 
+        &errorFdsCopy, &timeout);
+    
+    if (activity < 0)
+    {
+        if (errno != EINTR) // Ignore if interrupted by signal
+            std::cerr << "Select error: " << strerror(errno) << std::endl;
+        return;
+    }
+    else if (activity == 0) 
+    {
+        // Timeout occurred, no activity
+        return;
+    }
+    
+    std::cout << "DEBUG: select() returned " << activity 
+        << " ready file descriptors" << std::endl;
+    
+    // Use the copied fd_sets which select() modified
+    _readFds = readFdsCopy;
+    _writeFds = writeFdsCopy;
+    _errorFds = errorFdsCopy;
+    
+    // Process I/O events
+    acceptConnections();
+    handleRequests();
+    sendResponses();
+    checkTimeouts();
 }
 
 /**

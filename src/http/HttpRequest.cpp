@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:50:42 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/01 10:37:08 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/02 20:42:57 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,9 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
+#include <iostream>
+#include <cstring>
+#include <cerrno>
 
 /**
  * Constructor initializes parsing state
@@ -84,17 +87,39 @@ bool	HttpRequest::read(Socket& clientSocket)
 	
 	ssize_t bytesRead = clientSocket.recv(buffer, BUFFER_SIZE);
 	
+	std::cout << "DEBUG: HttpRequest::read() received " << bytesRead 
+	    << " bytes" << std::endl;
+	
 	if (bytesRead <= 0)
+	{
+	    if (bytesRead == 0)
+	        std::cout << "DEBUG: Client closed connection" << std::endl;
+	    else
+		{
+			std::cout << "DEBUG: Error reading from socket: "  
+			<< strerror(errno) << std::endl;			
+		}
 		return false;
+	}
 		
 	// Append the received data to our buffer
 	_buffer.append(buffer, bytesRead);
+	
+	// Print first line of the buffer for debugging
+	size_t firstLineEnd = _buffer.find("\r\n");
+	if (firstLineEnd != std::string::npos)
+	    std::cout << "DEBUG: First line of request: " 
+	        << _buffer.substr(0, firstLineEnd) << std::endl;
+	else
+	    std::cout << "DEBUG: Request buffer (incomplete): " 
+	        << _buffer << std::endl;
 	
 	// Process the buffer based on current state
 	bool done = false;
 	
 	while (!done)
 	{
+	    std::cout << "DEBUG: Request parse state: " << _state << std::endl;
 		switch (_state)
 		{
 			case REQUEST_LINE:
@@ -118,6 +143,7 @@ bool	HttpRequest::read(Socket& clientSocket)
 				{
 					_buffer = _buffer.substr(2);
 					_state = COMPLETE;
+					std::cout << "DEBUG: Request is COMPLETE after chunked end" << std::endl;
 				}
 				else
 				{
@@ -125,15 +151,21 @@ bool	HttpRequest::read(Socket& clientSocket)
 				}
 				break;
 			case COMPLETE:
+			    std::cout << "DEBUG: Request is COMPLETE" << std::endl;
 				return true;
 			case ERROR:
+			    std::cout << "DEBUG: Request has ERROR state" << std::endl;
 				return true;
 			default:
 				done = true;
 		}
 	}
 	
-	return (_state == COMPLETE || _state == ERROR);
+	bool isComplete = (_state == COMPLETE || _state == ERROR);
+	std::cout << "DEBUG: Returning from read(), request is " 
+	    << (isComplete ? "COMPLETE" : "INCOMPLETE") << std::endl;
+	
+	return isComplete;
 }
 
 /**
@@ -144,17 +176,26 @@ bool	HttpRequest::parseRequestLine(void)
 	size_t endPos = _buffer.find("\r\n");
 	
 	if (endPos == std::string::npos)
+	{
+	    std::cout << "DEBUG: Request line incomplete, waiting for more data" << std::endl;
 		return false;
+	}
 		
 	std::string line = _buffer.substr(0, endPos);
 	_buffer = _buffer.substr(endPos + 2);
 	
+	std::cout << "DEBUG: Parsing request line: " << line << std::endl;
+	
 	std::istringstream lineStream(line);
 	if (!(lineStream >> _method >> _uri >> _httpVersion))
 	{
+	    std::cout << "DEBUG: Failed to parse request line" << std::endl;
 		_state = ERROR;
 		return false;
 	}
+	
+	std::cout << "DEBUG: Method=" << _method << ", URI=" << _uri 
+	    << ", Version=" << _httpVersion << std::endl;
 	
 	// Parse the URI into path and query
 	size_t queryPos = _uri.find('?');
@@ -167,6 +208,8 @@ bool	HttpRequest::parseRequestLine(void)
 	{
 		_path = _uri;
 	}
+	
+	std::cout << "DEBUG: Path=" << _path << ", Query=" << _query << std::endl;
 	
 	_state = HEADERS;
 	return true;
@@ -182,12 +225,17 @@ bool	HttpRequest::parseHeaders(void)
 		size_t endPos = _buffer.find("\r\n");
 		
 		if (endPos == std::string::npos)
+		{
+		    std::cout << "DEBUG: Headers incomplete, waiting for more data" << std::endl;
 			return false;
+		}
 			
 		// If we find an empty line, headers are complete
 		if (endPos == 0)
 		{
 			_buffer = _buffer.substr(2);
+			
+			std::cout << "DEBUG: End of headers found" << std::endl;
 			
 			// Determine the next state based on headers
 			std::string transferEncoding = getHeader("Transfer-Encoding");
@@ -196,6 +244,7 @@ bool	HttpRequest::parseHeaders(void)
 				
 			if (transferEncoding.find("chunked") != std::string::npos)
 			{
+			    std::cout << "DEBUG: Found chunked encoding" << std::endl;
 				_chunked = true;
 				_state = CHUNKED_SIZE;
 			}
@@ -205,11 +254,13 @@ bool	HttpRequest::parseHeaders(void)
 				if (!contentLengthStr.empty())
 				{
 					_contentLength = strtoul(contentLengthStr.c_str(), NULL, 10);
+					std::cout << "DEBUG: Content-Length: " << _contentLength << std::endl;
 					_state = BODY;
 				}
 				else
 				{
 					// No content expected, request is complete
+					std::cout << "DEBUG: No body expected, request is complete" << std::endl;
 					_state = COMPLETE;
 				}
 			}
@@ -220,9 +271,12 @@ bool	HttpRequest::parseHeaders(void)
 		std::string line = _buffer.substr(0, endPos);
 		_buffer = _buffer.substr(endPos + 2);
 		
+		std::cout << "DEBUG: Parsing header line: " << line << std::endl;
+		
 		size_t colonPos = line.find(':');
 		if (colonPos == std::string::npos)
 		{
+		    std::cout << "DEBUG: Invalid header line: " << line << std::endl;
 			_state = ERROR;
 			return false;
 		}
@@ -242,6 +296,7 @@ bool	HttpRequest::parseHeaders(void)
 			value = "";
 		}
 		
+		std::cout << "DEBUG: Header: [" << name << "] = [" << value << "]" << std::endl;
 		_headers[name] = value;
 	}
 }
@@ -251,14 +306,19 @@ bool	HttpRequest::parseHeaders(void)
  */
 bool	HttpRequest::parseBody(void)
 {
+    std::cout << "DEBUG: Parsing body, have " << _buffer.size() 
+        << " bytes, need " << _contentLength << std::endl;
+        
 	if (_buffer.size() >= _contentLength)
 	{
 		_body.append(_buffer.substr(0, _contentLength));
 		_buffer = _buffer.substr(_contentLength);
 		_state = COMPLETE;
+		std::cout << "DEBUG: Body complete with " << _body.size() << " bytes" << std::endl;
 		return true;
 	}
 	
+	std::cout << "DEBUG: Body incomplete, waiting for more data" << std::endl;
 	return false;
 }
 
@@ -270,7 +330,10 @@ bool	HttpRequest::parseChunkedSize(void)
 	size_t endPos = _buffer.find("\r\n");
 	
 	if (endPos == std::string::npos)
+	{
+	    std::cout << "DEBUG: Chunk size line incomplete" << std::endl;
 		return false;
+	}
 		
 	std::string line = _buffer.substr(0, endPos);
 	_buffer = _buffer.substr(endPos + 2);
@@ -279,9 +342,12 @@ bool	HttpRequest::parseChunkedSize(void)
 	char* endPtr;
 	_chunkSize = strtoul(line.c_str(), &endPtr, 16);
 	
+	std::cout << "DEBUG: Chunk size: " << _chunkSize << " bytes" << std::endl;
+	
 	if (_chunkSize == 0)
 	{
 		// Final chunk, look for trailing headers (not implemented)
+		std::cout << "DEBUG: Final chunk (size 0) received" << std::endl;
 		_state = CHUNKED_END;
 	}
 	else
@@ -297,14 +363,21 @@ bool	HttpRequest::parseChunkedSize(void)
  */
 bool	HttpRequest::parseChunkedData(void)
 {
+    std::cout << "DEBUG: Parsing chunk data, have " << _buffer.size() 
+        << " bytes, need " << _chunkSize + 2 << std::endl;
+        
 	if (_buffer.size() >= _chunkSize + 2)  // +2 for CRLF
 	{
 		_body.append(_buffer.substr(0, _chunkSize));
 		_buffer = _buffer.substr(_chunkSize + 2);  // Skip CRLF
 		_state = CHUNKED_SIZE;
+		
+		std::cout << "DEBUG: Chunk data complete, body now " 
+		    << _body.size() << " bytes" << std::endl;
 		return true;
 	}
 	
+	std::cout << "DEBUG: Chunk data incomplete, waiting for more data" << std::endl;
 	return false;
 }
 
@@ -313,17 +386,23 @@ bool	HttpRequest::parseChunkedData(void)
  */
 HttpResponse	HttpRequest::process(const Config& config)
 {
+    std::cout << "DEBUG: Processing request: " << _method << " " 
+        << _uri << " " << _httpVersion << std::endl;
+    
 	HttpResponse response;
 	
 	// Extract host and port from Host header
 	std::string host = getHeader("Host");
 	int port = 80;  // Default
 	
+	std::cout << "DEBUG: Host header: " << host << std::endl;
+	
 	size_t colonPos = host.find(':');
 	if (colonPos != std::string::npos)
 	{
 		port = atoi(host.substr(colonPos + 1).c_str());
 		host = host.substr(0, colonPos);
+		std::cout << "DEBUG: Extracted host=" << host << ", port=" << port << std::endl;
 	}
 	
 	// Find the appropriate server configuration
@@ -331,25 +410,34 @@ HttpResponse	HttpRequest::process(const Config& config)
 	
 	if (!server)
 	{
+	    std::cout << "DEBUG: No matching server configuration found" << std::endl;
 		response.setStatus(404);
 		response.setBody(config.getDefaultErrorPage(404));
 		return response;
 	}
+	
+	std::cout << "DEBUG: Found matching server for " << host 
+	    << ":" << port << std::endl;
 	
 	// Find the appropriate location configuration
 	const LocationConfig* location = findLocation(*server);
 	
 	if (!location)
 	{
+	    std::cout << "DEBUG: No matching location configuration found for " 
+	        << _path << std::endl;
 		response.setStatus(404);
 		response.setBody(config.getDefaultErrorPage(404));
 		return response;
 	}
 	
+	std::cout << "DEBUG: Found matching location: " << location->path << std::endl;
+	
 	// Check if method is allowed
 	if (!location->allowedMethods.empty() && 
 		location->allowedMethods.find(_method) == location->allowedMethods.end())
 	{
+	    std::cout << "DEBUG: Method " << _method << " not allowed" << std::endl;
 		response.setStatus(405);
 		response.setBody(config.getDefaultErrorPage(405));
 		return response;
@@ -358,20 +446,20 @@ HttpResponse	HttpRequest::process(const Config& config)
 	// Handle redirections
 	if (!location->redirect.empty())
 	{
+	    std::cout << "DEBUG: Redirecting to " << location->redirect << std::endl;
 		response.setStatus(301);
 		response.addHeader("Location", location->redirect);
 		return response;
 	}
 	
-	// TODO: Implement actual request handling logic:
-	// - Static file serving
-	// - Directory listing
-	// - CGI execution
-	// - File uploads
-	
 	// For now, just return a simple success response
+	std::cout << "DEBUG: Generating simple success response" << std::endl;
 	response.setStatus(200);
-	response.setBody("<html><body><h1>Hello from WebServ!</h1></body></html>");
+	response.setBody("<html><body><h1>Hello from WebServ!</h1>"
+	                 "<p>Your request was processed successfully.</p>"
+	                 "<p>Method: " + _method + "</p>"
+	                 "<p>Path: " + _path + "</p>"
+	                 "</body></html>");
 	response.addHeader("Content-Type", "text/html");
 	
 	return response;
