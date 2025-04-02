@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/02 20:35:18 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/02 20:54:11 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -222,99 +222,115 @@ void	Server::handleRequests(void)
 	}
 }
 
+
 /**
  * Send responses to clients with ready write descriptors
  */
-void	Server::sendResponses(void)
+void Server::sendResponses(void)
 {
     std::cout << "DEBUG: Checking for sockets ready to write" << std::endl;
     
-	std::vector<int> toRemove;
-	
-	for (std::map<int, HttpResponse>::iterator it = _responses.begin();
-		it != _responses.end(); ++it)
-	{
-		int clientFd = it->first;
-		
-		// Validate file descriptor before using it
-		if (clientFd < 0 || clientFd >= FD_SETSIZE) {
-			std::cerr << "Error: Invalid file descriptor " << clientFd << std::endl;
-			toRemove.push_back(clientFd);
-			continue;
-		}
-		
-		std::cout << "DEBUG: Checking if socket " << clientFd 
+    std::vector<int> toRemove;
+    std::vector<int> toKeepAlive;  // New vector to track connections to keep alive
+    
+    for (std::map<int, HttpResponse>::iterator it = _responses.begin();
+        it != _responses.end(); ++it)
+    {
+        int clientFd = it->first;
+        
+        // Validate file descriptor before using it
+        if (clientFd < 0 || clientFd >= FD_SETSIZE) {
+            std::cerr << "Error: Invalid file descriptor " << clientFd << std::endl;
+            toRemove.push_back(clientFd);
+            continue;
+        }
+        
+        std::cout << "DEBUG: Checking if socket " << clientFd 
             << " is ready for writing: " 
             << (FD_ISSET(clientFd, &_writeFds) ? "YES" : "NO") << std::endl;
             
-		if (FD_ISSET(clientFd, &_writeFds))
-		{
-			try
-			{
-				HttpResponse& response = it->second;
-				
-				// Check if client socket exists before accessing it
-				if (_clientSockets.find(clientFd) == _clientSockets.end()) {
-					std::cerr << "Error: Client socket not found for fd " 
-						<< clientFd << std::endl;
-					toRemove.push_back(clientFd);
-					continue;
-				}
-				
-				std::cout << "DEBUG: Attempting to send response on fd " 
+        if (FD_ISSET(clientFd, &_writeFds))
+        {
+            try
+            {
+                HttpResponse& response = it->second;
+                
+                // Check if client socket exists before accessing it
+                if (_clientSockets.find(clientFd) == _clientSockets.end()) {
+                    std::cerr << "Error: Client socket not found for fd " 
+                        << clientFd << std::endl;
+                    toRemove.push_back(clientFd);
+                    continue;
+                }
+                
+                std::cout << "DEBUG: Attempting to send response on fd " 
                     << clientFd << std::endl;
                     
-				if (response.send(_clientSockets[clientFd]))
-				{
-					// Response fully sent, either keep-alive or close
-					std::cout << "DEBUG: Response fully sent on fd " 
+                if (response.send(_clientSockets[clientFd]))
+                {
+                    // Response fully sent, either keep-alive or close
+                    std::cout << "DEBUG: Response fully sent on fd " 
                         << clientFd << std::endl;
                         
-					if (response.shouldKeepAlive())
-					{
-						// Reset for new request
-						std::cout << "DEBUG: Keeping connection alive, "
-                            << "switching back to read mode" << std::endl;
-						_requests.erase(clientFd);
-						_responses.erase(clientFd);
-						FD_CLR(clientFd, &_writeFds);
-						FD_SET(clientFd, &_readFds);
-					}
-					else
-					{
-						std::cout << "DEBUG: Connection will be closed" << std::endl;
-						toRemove.push_back(clientFd);
-					}
-				}
-				else
-				{
-				    std::cout << "DEBUG: Response not fully sent yet, "
+                    if (response.shouldKeepAlive())
+                    {
+                        // Mark for keep-alive processing AFTER we finish iterating
+                        std::cout << "DEBUG: Marking connection for keep-alive: " 
+                            << clientFd << std::endl;
+                        toKeepAlive.push_back(clientFd);
+                    }
+                    else
+                    {
+                        std::cout << "DEBUG: Connection will be closed" << std::endl;
+                        toRemove.push_back(clientFd);
+                    }
+                }
+                else
+                {
+                    std::cout << "DEBUG: Response not fully sent yet, "
                         << "will try again later" << std::endl;
-				}
-			}
-			catch (const std::exception& e)
-			{
-				std::cerr << "Error sending response on fd " << clientFd 
-					<< ": " << e.what() << std::endl;
-				toRemove.push_back(clientFd);
-			}
-		}
-	}
-	
-	// Clean up connections we're done with
-	for (std::vector<int>::iterator it = toRemove.begin();
-		it != toRemove.end(); ++it)
-	{
-		FD_CLR(*it, &_readFds);
-		FD_CLR(*it, &_writeFds);
-		_clientSockets.erase(*it);
-		_requests.erase(*it);
-		_responses.erase(*it);
-		close(*it);
-		std::cout << "Connection closed: fd " << *it << std::endl;
-	}
+                }
+            }
+            catch (const std::exception& e)
+            {
+                std::cerr << "Error sending response on fd " << clientFd 
+                    << ": " << e.what() << std::endl;
+                toRemove.push_back(clientFd);
+            }
+        }
+    }
+    
+    // Process keep-alive connections AFTER iteration is complete
+    for (std::vector<int>::iterator it = toKeepAlive.begin();
+         it != toKeepAlive.end(); ++it)
+    {
+        int clientFd = *it;
+        std::cout << "DEBUG: Keeping connection alive, "
+            << "switching " << clientFd << " back to read mode" << std::endl;
+        
+        // Reset for new request
+        _requests.erase(clientFd);
+        _responses.erase(clientFd);
+        FD_CLR(clientFd, &_writeFds);
+        FD_SET(clientFd, &_readFds);
+    }
+    
+    // Clean up connections we're done with
+    for (std::vector<int>::iterator it = toRemove.begin();
+        it != toRemove.end(); ++it)
+    {
+        int clientFd = *it;
+        std::cout << "DEBUG: Closing connection: " << clientFd << std::endl;
+        
+        FD_CLR(clientFd, &_readFds);
+        FD_CLR(clientFd, &_writeFds);
+        _clientSockets.erase(clientFd);
+        _requests.erase(clientFd);
+        _responses.erase(clientFd);
+        close(clientFd);
+        std::cout << "Connection closed: fd " << clientFd << std::endl;
+    }
 }
-
 /**
  * Check for and remove idle connections that have timed out
  */
