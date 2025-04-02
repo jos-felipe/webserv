@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/02 10:55:52 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/02 13:48:36 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,7 +86,8 @@ void	Server::initializeSockets(void)
 			socket.listen();
 			
 			_listenSockets.push_back(socket);
-			int fd = _listenSockets.back().getFd();
+			int fd = socket.getFd();
+			
 			FD_SET(fd, &_readFds);
 			
 			if (fd > _maxFd)
