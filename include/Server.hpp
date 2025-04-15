@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:45:21 by josfelip          #+#    #+#             */
-/*   Updated: 2025/03/27 12:21:16 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/15 12:54:40 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ private:
 	fd_set						_writeFds;
 	fd_set						_errorFds;
 	int							_maxFd;
+	int							_epollFd;
 	
 	/**
 	 * Initialize listening sockets based on configuration

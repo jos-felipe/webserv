@@ -6,13 +6,14 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/02 20:54:11 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/15 13:03:52 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 #include <iostream>
 #include <sys/select.h>
+#include <sys/epoll.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <cerrno>
@@ -36,6 +37,10 @@ Server::Server(const Config& config) : _config(&config), _maxFd(0)
 	FD_ZERO(&_readFds);
 	FD_ZERO(&_writeFds);
 	FD_ZERO(&_errorFds);
+	_epollFd = epoll_create(0);
+	if (_epollFd == -1) {
+		throw std::runtime_error("Failed to create epoll instance: " + std::string(strerror(errno)));
+	}
 }
 
 /**
