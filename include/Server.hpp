@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:45:21 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/15 12:54:40 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/15 15:07:52 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 # include <vector>
 # include <string>
 # include <sys/time.h>
+# include <sys/epoll.h>
 # include "Config.hpp"
 # include "Socket.hpp"
 # include "HttpRequest.hpp"
@@ -28,7 +29,7 @@
  * 
  * This class is responsible for initializing server sockets based on configuration,
  * accepting new connections, processing HTTP requests, and sending responses.
- * It implements a non-blocking I/O model using poll() as required by the subject.
+ * It implements a non-blocking I/O model using epoll() as required by the subject.
  */
 class Server
 {
@@ -38,10 +39,6 @@ private:
 	std::map<int, Socket>		_clientSockets;
 	std::map<int, HttpRequest>	_requests;
 	std::map<int, HttpResponse>	_responses;
-	fd_set						_readFds;
-	fd_set						_writeFds;
-	fd_set						_errorFds;
-	int							_maxFd;
 	int							_epollFd;
 	
 	/**
@@ -68,6 +65,13 @@ private:
 	 * Check for and remove timed out connections
 	 */
 	void			checkTimeouts(void);
+
+	void			registerFd(int fd, uint32_t events);
+	void			modifyFd(int fd, uint32_t events);
+	void			unregisterFd(int fd);
+	
+	void			setReadable(int fd, bool enable);
+	void			setWritable(int fd, bool enable);
 	
 	/**
 	 * Copy constructor - private to prevent copying
