@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/15 15:06:57 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/15 15:38:16 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -342,6 +342,33 @@ void	Server::checkTimeouts(void)
 {
 	// Implementation would check timestamps of connections
 	// and remove those that exceed timeout threshold
+}
+
+void	Server::registerFd(int fd, uint32_t events) {
+	struct epoll_event	ev;
+	ev.events = events;
+	ev.data.fd = fd;
+
+	if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, fd, &ev) == -1) {
+		throw std::runtime_error("Failed to add fd to epoll: " + std::string(strerror(errno)));
+	}
+}
+
+void	Server::modifyFd(int fd, uint32_t events) {
+	struct epoll_event	ev;
+	ev.events = events;
+	ev.data.fd = fd;
+
+	if (epoll_ctl(_epollFd, EPOLL_CTL_MOD, fd, &ev) == -1) {
+		throw std::runtime_error("Failed to modify fd in epoll: " + std::string(strerror(errno)));
+	}
+}
+
+void	Server::unregisterFd(int fd) {
+	if (epoll_ctl(_epollFd, EPOLL_CTL_DEL, fd, NULL) == -1)
+	{
+		std::cerr << "Failed to remove fd from epoll: " << strerror(errno) << std::endl;
+	}
 }
 
 /**
