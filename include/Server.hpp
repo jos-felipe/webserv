@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:45:21 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/15 15:07:52 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/15 17:27:45 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 # include <string>
 # include <sys/time.h>
 # include <sys/epoll.h>
+# include <algorithm>
 # include "Config.hpp"
 # include "Socket.hpp"
 # include "HttpRequest.hpp"

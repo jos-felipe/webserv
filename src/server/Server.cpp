@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/15 15:38:16 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/15 17:52:14 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -368,6 +368,41 @@ void	Server::unregisterFd(int fd) {
 	if (epoll_ctl(_epollFd, EPOLL_CTL_DEL, fd, NULL) == -1)
 	{
 		std::cerr << "Failed to remove fd from epoll: " << strerror(errno) << std::endl;
+	}
+}
+
+void	Server::setReadable(int fd, bool enable) {
+	struct epoll_event	ev;
+	ev.data.fd = fd;
+
+	bool	isClientSocket = (_clientSockets.find(fd) != _clientSockets.end());
+	
+	bool	isListenSocket = (
+		std::find(
+			_listenSockets.begin(),
+			_listenSockets.end(),
+			Socket(fd, sockaddr_in())
+		)
+		!=
+		_listenSockets.end()
+	);
+	
+	if (!isClientSocket && !isListenSocket) {
+		std::cerr << "Socket not found for fd " << fd << std::endl;
+	}
+	
+	if (enable)
+		ev.events = EPOLLIN;
+	else
+		ev.events = 0;
+
+	if (_responses.find(fd) != _responses.end())
+		ev.events |= EPOLLOUT;
+	
+	if (epoll_ctl(_epollFd, EPOLL_CTL_MOD, fd, &ev) == -1) {
+		if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, fd, &ev) == -1) {
+			std::cerr << "Failed to set up epoll events for fd" << fd << std::endl;
+		}
 	}
 }
 
