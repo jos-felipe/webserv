@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:45:21 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/15 17:27:45 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/21 00:20:41 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,6 +73,8 @@ private:
 	
 	void			setReadable(int fd, bool enable);
 	void			setWritable(int fd, bool enable);
+
+	void			processEvents(struct epoll_event *events, int numEvents);
 	
 	/**
 	 * Copy constructor - private to prevent copying

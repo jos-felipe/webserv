@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/20 18:04:03 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/21 00:46:35 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -452,56 +452,29 @@ void	Server::start(void)
 }
 
 /**
- * Run one iteration of the server event loop
+ * Run one iteration of the server event loop using epoll
  */
 void	Server::run(void)
 {
-    // Create temporary copies for select() to modify
-    fd_set readFdsCopy;
-    fd_set writeFdsCopy;
-    fd_set errorFdsCopy;
-    
-    // Copy the master sets to the temporary sets
-    readFdsCopy = _readFds;
-    writeFdsCopy = _writeFds;
-    errorFdsCopy = _errorFds;
-    
-    // Show which file descriptors we're monitoring
-    std::cout << "DEBUG: select() monitoring " << _maxFd + 1 
-        << " file descriptors" << std::endl;
-    
-    struct timeval timeout;
-    timeout.tv_sec = 1;
-    timeout.tv_usec = 0;
-    
-    int activity = select(_maxFd + 1, &readFdsCopy, &writeFdsCopy, 
-        &errorFdsCopy, &timeout);
-    
-    if (activity < 0)
-    {
-        if (errno != EINTR) // Ignore if interrupted by signal
-            std::cerr << "Select error: " << strerror(errno) << std::endl;
-        return;
-    }
-    else if (activity == 0) 
-    {
-        // Timeout occurred, no activity
-        return;
-    }
-    
-    std::cout << "DEBUG: select() returned " << activity 
-        << " ready file descriptors" << std::endl;
-    
-    // Use the copied fd_sets which select() modified
-    _readFds = readFdsCopy;
-    _writeFds = writeFdsCopy;
-    _errorFds = errorFdsCopy;
-    
-    // Process I/O events
-    acceptConnections();
-    handleRequests();
-    sendResponses();
-    checkTimeouts();
+	const int	MAX_EVENTS = 64;
+	const int	TIMEOUT = 1000; // in ms (1s)
+	struct epoll_event	events[MAX_EVENTS];
+	
+	int	numEvents = epoll_wait(_epollFd, events, MAX_EVENTS, TIMEOUT);
+
+	if (numEvents == -1) {
+		std::cerr << "epoll_wait error occurred" << std::endl;
+		return;
+	}
+	
+	if (numEvents)
+		return;
+		
+	std::cout << "DEBUG: epoll_wait returned " << numEvents << " events" << std::endl;
+
+	processEvents(events, numEvents);
+	
+	checkTimeouts();
 }
 
 /**
@@ -527,4 +500,32 @@ void	Server::stop(void)
 	_responses.clear();
 	
 	std::cout << "Server stopped" << std::endl;
+}
+
+void	Server::processEvents(struct epoll_event *events, int numEvents) {
+	for (int i = 0; i < numEvents; i++) {
+		int			fd = events[i].data.fd;
+		uint32_t	eventType = events[i].events;
+		
+		bool	isListenSocket = false;
+		for (const Socket& listenSocket : _listenSockets) {
+			if (listenSocket.getFd() == fd) {
+				isListenSocket = true;
+				break;
+			}
+		}
+		
+		if (isListenSocket) {
+			handleNewConnection(fd);
+		}
+		else if (eventType & EPOLLIN) {
+			handleClientRead(fd);
+		}
+		else if (eventType & EPOLLOUT) {
+			handleClientWrite(fd);
+		}
+		else if (eventType & (EPOLLERR | EPOLLHUP)) {
+			handleClientError(fd);
+		}	
+	}
 }
