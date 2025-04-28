@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:45:21 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/21 00:20:41 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/28 09:42:11 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@
 class Server
 {
 private:
-	const Config*				_config;  // Changed to pointer to allow default constructor
+	const Config*				_config;
 	std::vector<Socket>			_listenSockets;
 	std::map<int, Socket>		_clientSockets;
 	std::map<int, HttpRequest>	_requests;
@@ -62,19 +62,22 @@ private:
 	 */
 	void			sendResponses(void);
 	
-	/**
-	 * Check for and remove timed out connections
-	 */
+	
 	void			checkTimeouts(void);
 
 	void			registerFd(int fd, uint32_t events);
 	void			modifyFd(int fd, uint32_t events);
 	void			unregisterFd(int fd);
 	
-	void			setReadable(int fd, bool enable);
-	void			setWritable(int fd, bool enable);
-
-	void			processEvents(struct epoll_event *events, int numEvents);
+	void	setReadable(int fd, bool enable);
+	void	setWritable(int fd, bool enable);
+	
+	void	handleNewConnection(int fd);
+	void	handleClientRead(int fd);
+	void	handleClientWrite(int fd);
+	void	handleClientError(int fd);
+	void	processEvents(struct epoll_event *events, int numEvents);
+	
 	
 	/**
 	 * Copy constructor - private to prevent copying
