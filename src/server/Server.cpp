@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/21 00:46:35 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/28 09:19:50 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -508,8 +508,8 @@ void	Server::processEvents(struct epoll_event *events, int numEvents) {
 		uint32_t	eventType = events[i].events;
 		
 		bool	isListenSocket = false;
-		for (const Socket& listenSocket : _listenSockets) {
-			if (listenSocket.getFd() == fd) {
+		for (std::vector<Socket>::const_iterator it = _listenSockets.begin(); it != _listenSockets.end(); ++it) {
+			if (it->getFd() == fd) {
 				isListenSocket = true;
 				break;
 			}
