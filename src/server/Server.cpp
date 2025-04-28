@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/28 09:19:50 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/28 16:02:36 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -527,5 +527,37 @@ void	Server::processEvents(struct epoll_event *events, int numEvents) {
 		else if (eventType & (EPOLLERR | EPOLLHUP)) {
 			handleClientError(fd);
 		}	
+	}
+}
+
+void	Server::handleNewConnection(int listenFd) {
+	try {
+		Socket* listenSocket = NULL;
+		for (std::vector<Socket>::iterator it = _listenSockets.begin(); it != _listenSockets.end(); ++it) {
+			if (it->getFd() == listenFd) {
+				listenSocket = &(*it);
+				break ;
+			}
+		}
+		
+		if (!lestenSocket) {
+			std::cerr << "Error: Listening socket not found for fd " << listenFd << std::endl;
+			return ;
+		}
+		Socket clientSocket = listenSocket->accept();
+	
+		if (clientSocket.getFd() >= 0) {
+			clientSocket.setNonBlocking();
+	
+			int clientFd = clientSocket.getFd();
+			_clientSockets[clientFd] = clientSocket;
+	
+			setReadble(clientFd, true);
+			
+			std::cout << "New connection ccepted: fd " << clientFd << std::endl;
+		}
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Failed to accept connection: " << e.what() << std::endl;
 	}
 }
