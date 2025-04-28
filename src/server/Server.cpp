@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/28 16:02:36 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/04/28 16:06:28 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -540,7 +540,7 @@ void	Server::handleNewConnection(int listenFd) {
 			}
 		}
 		
-		if (!lestenSocket) {
+		if (!listenSocket) {
 			std::cerr << "Error: Listening socket not found for fd " << listenFd << std::endl;
 			return ;
 		}
@@ -554,7 +554,7 @@ void	Server::handleNewConnection(int listenFd) {
 	
 			setReadble(clientFd, true);
 			
-			std::cout << "New connection ccepted: fd " << clientFd << std::endl;
+			std::cout << "New connection accepted: fd " << clientFd << std::endl;
 		}
 	}
 	catch (const std::exception& e) {
