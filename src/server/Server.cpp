@@ -598,3 +598,41 @@ void Server::handleCientRead(int ClientFd) {
     handleClientError(clientFd);
   }
 }
+
+void Server::handleClientWrite(int clientFd) {
+  try {
+    if (_responses.find(clientFd) == _responses.end()) {
+      std::cerr << "No response queued for fd " << clientFd << std::endl;
+      return ;
+    }
+
+    HttpResponse& response = _responses[clientFd];
+
+    if (_clientSockets.find(clientFd) == _clientSockets.end())
+    {
+      std::cerr << "Client socket not found for fd " << clientFd << std::endl;
+      return ;
+    }
+
+    std::cout << "DEBUG: Attempting to send response on fd " << clientFd << std::endl;
+
+    if (response.send(_clientSockets[clientFd])) {
+      std::cout << "DEBUG: Response fully sent on fd " << clientFd << std::endl;
+      
+      if (response.shouldKeepAlive()) {
+        std::cout << "DEBUG: keeping connection alive, switching " << clientFd << " back to read mode" << std::endl;
+  
+        _requests.erase(clientFd);
+        _responses.erase(clientFd);
+        setReadable(clientFd, true);
+      } else {
+        std::cout << "DEBUG: Connection will be closed" << std::endl;
+        handleClientError(clientFd);
+      }
+    }
+  }
+  catch (const std::exception& e) {
+    std::cerr << "Error sending response on fd " << clientFd << ": " << e.what() << std::endl;
+    handleClientError(clientFd);
+  }
+}
