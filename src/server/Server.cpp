@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/05/22 01:11:10 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/05/22 01:21:56 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -647,4 +647,29 @@ void Server::handleClientError(int clientFd) {
 	close(clientFd);
 
 	std::cout << "Connection closed: fd " << clientFd << std::endl;
+}
+
+void Server::processEvents(struct epoll_event *events, int numEvents) {
+	for (int i = 0; i < numEvents, i++) {
+		int fd = events[i].data.fd;
+		uint32_t eventType = events[i].events;
+
+		bool isListenSocket = false;
+		for (std::vector<Socket>::iterator it = _listenSockets.begin(); it != _listenSockets.end(); ++it) {
+			if (it->getFd() == fd) {
+				isListenSocket = true;
+				break;
+			}
+		}
+
+		if (isListenSocket) {
+			handleNewConnection(fd);
+		} else if (eventType & EPOLLIN) {
+			handleClientRead(fd);
+		} else if (eventType & EPOLLOUT) {
+			handleClientWrite(fd);
+		} else if (eventType & (EPOLLERR | EPOLLHUP)) {
+			handleClientError(fd);
+		}
+	}
 }
