@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/28 16:06:28 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/05/22 01:11:10 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -635,4 +635,16 @@ void Server::handleClientWrite(int clientFd) {
     std::cerr << "Error sending response on fd " << clientFd << ": " << e.what() << std::endl;
     handleClientError(clientFd);
   }
+}
+
+void Server::handleClientError(int clientFd) {
+	std::cout << "DEBUG: Closing connection: " << clientFd << std::endl;
+	
+	unregisterFd(clientFd);
+	_clientSockets.erase(clientFd);
+	_requests.erase(clientFd);
+	_responses.erase(clientFd);
+	close(clientFd);
+
+	std::cout << "Connection closed: fd " << clientFd << std::endl;
 }
