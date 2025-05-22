@@ -6,36 +6,20 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/05/22 01:21:56 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/05/22 01:34:59 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 #include <iostream>
-#include <sys/select.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <cerrno>
 #include <cstring>
 
-/**
- * Default constructor initializes an empty server
- */
-Server::Server(void) : _config(NULL), _maxFd(0)
-{
-  FD_ZERO(&_readFds);
-  FD_ZERO(&_writeFds);
-  FD_ZERO(&_errorFds);
-}
 
-/**
- * Constructor initializes server with provided configuration
- */
-Server::Server(const Config& config) : _config(&config), _maxFd(0)
+Server::Server(const Config& config) : _config(&config)
 {
-  FD_ZERO(&_readFds);
-  FD_ZERO(&_writeFds);
-  FD_ZERO(&_errorFds);
   _epollFd = epoll_create(0);
   if (_epollFd == -1) {
     throw std::runtime_error("Failed to create epoll instance: " + std::string(strerror(errno)));
@@ -457,10 +441,9 @@ void	Server::start(void)
 void	Server::run(void)
 {
   const int	MAX_EVENTS = 64;
-  const int	TIMEOUT = 1000; // in ms (1s)
-  struct epoll_event	events[MAX_EVENTS];
+  struct epoll_event events[MAX_EVENTS];
   
-  int	numEvents = epoll_wait(_epollFd, events, MAX_EVENTS, TIMEOUT);
+  int numEvents = epoll_wait(_epollFd, events, MAX_EVENTS, 1000);
 
   if (numEvents == -1) {
     std::cerr << "epoll_wait error occurred" << std::endl;
