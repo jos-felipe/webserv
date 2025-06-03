@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/02 20:54:11 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/06/03 14:15:07 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,14 +110,14 @@ void	Server::initializeSockets(void)
 /**
  * Accept new client connections on listening sockets
  */
-void Server::acceptConnections(void)
+void Server::acceptConnections(fd_set *readFdsReady)
 {
     for (std::vector<Socket>::iterator it = _listenSockets.begin();
         it != _listenSockets.end(); ++it)
     {
         int listenFd = it->getFd();
         
-        if (FD_ISSET(listenFd, &_readFds))
+        if (FD_ISSET(listenFd, readFdsReady))
         {
             std::cout << "DEBUG: Listen socket " << listenFd 
                 << " is ready for accepting" << std::endl;
@@ -153,7 +153,7 @@ void Server::acceptConnections(void)
 /**
  * Handle client requests by reading from ready sockets
  */
-void	Server::handleRequests(void)
+void	Server::handleRequests(fd_set *readFdsReady)
 {
 	if (!_config)
 		return;
@@ -165,7 +165,7 @@ void	Server::handleRequests(void)
 	{
 		int clientFd = it->first;
 		
-		if (FD_ISSET(clientFd, &_readFds))
+		if (FD_ISSET(clientFd, readFdsReady))
 		{
 		    std::cout << "DEBUG: Client socket " << clientFd 
                 << " is ready for reading" << std::endl;
@@ -226,7 +226,7 @@ void	Server::handleRequests(void)
 /**
  * Send responses to clients with ready write descriptors
  */
-void Server::sendResponses(void)
+void Server::sendResponses(fd_set *writeFdsReady)
 {
     std::cout << "DEBUG: Checking for sockets ready to write" << std::endl;
     
@@ -247,9 +247,9 @@ void Server::sendResponses(void)
         
         std::cout << "DEBUG: Checking if socket " << clientFd 
             << " is ready for writing: " 
-            << (FD_ISSET(clientFd, &_writeFds) ? "YES" : "NO") << std::endl;
+            << (FD_ISSET(clientFd, writeFdsReady) ? "YES" : "NO") << std::endl;
             
-        if (FD_ISSET(clientFd, &_writeFds))
+        if (FD_ISSET(clientFd, writeFdsReady))
         {
             try
             {
@@ -389,16 +389,11 @@ void	Server::run(void)
     
     std::cout << "DEBUG: select() returned " << activity 
         << " ready file descriptors" << std::endl;
-    
-    // Use the copied fd_sets which select() modified
-    _readFds = readFdsCopy;
-    _writeFds = writeFdsCopy;
-    _errorFds = errorFdsCopy;
-    
+      
     // Process I/O events
-    acceptConnections();
-    handleRequests();
-    sendResponses();
+    acceptConnections(&readFdsCopy);
+    handleRequests(&readFdsCopy);
+    sendResponses(&writeFdsCopy);
     checkTimeouts();
 }
 

@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:45:21 by josfelip          #+#    #+#             */
-/*   Updated: 2025/03/27 12:21:16 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/06/03 14:05:30 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,17 +51,17 @@ private:
 	/**
 	 * Accept new client connections
 	 */
-	void			acceptConnections(void);
+	void			acceptConnections(fd_set *readFdsReady);
 	
 	/**
 	 * Handle client requests
 	 */
-	void			handleRequests(void);
+	void			handleRequests(fd_set *readFdsReady);
 	
 	/**
 	 * Send responses to clients
 	 */
-	void			sendResponses(void);
+	void			sendResponses(fd_set *writeFdsReady);
 	
 	/**
 	 * Check for and remove timed out connections
