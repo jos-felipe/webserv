@@ -89,6 +89,53 @@ private:
 	 * Find the location configuration for this request
 	 */
 	const LocationConfig*				findLocation(const ServerConfig& server) const;
+	
+	/**
+	 * Handle GET request for static file serving
+	 */
+	HttpResponse						handleGet(const LocationConfig& location, 
+												HttpResponse& response, const Config& config);
+	
+	/**
+	 * Handle POST request for file uploads
+	 */
+	HttpResponse						handlePost(const LocationConfig& location, 
+												HttpResponse& response, const Config& config);
+	
+	/**
+	 * Handle DELETE request for file deletion
+	 */
+	HttpResponse						handleDelete(const LocationConfig& location, 
+												HttpResponse& response, const Config& config);
+	
+	/**
+	 * Get MIME type for file extension
+	 */
+	std::string							getMimeType(const std::string& filename) const;
+	
+	/**
+	 * Check if path is safe and within allowed directory
+	 */
+	bool								isPathSafe(const std::string& path, 
+												const std::string& root) const;
+	
+	/**
+	 * Generate directory listing for autoindex
+	 */
+	HttpResponse						generateDirectoryListing(const LocationConfig& location, 
+														HttpResponse& response);
+	
+	/**
+	 * Handle multipart/form-data file upload
+	 */
+	HttpResponse						handleFileUpload(const LocationConfig& location, 
+													HttpResponse& response, const Config& config);
+	
+	/**
+	 * Handle application/x-www-form-urlencoded data
+	 */
+	HttpResponse						handleFormData(const LocationConfig& location, 
+													HttpResponse& response, const Config& config);
 
 public:
 	/**

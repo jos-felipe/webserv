@@ -18,6 +18,10 @@
 #include <iostream>
 #include <cstring>
 #include <cerrno>
+#include <fstream>
+#include <ctime>
+#include <dirent.h>
+#include <sys/stat.h>
 
 /**
  * Constructor initializes parsing state
@@ -452,17 +456,26 @@ HttpResponse	HttpRequest::process(const Config& config)
 		return response;
 	}
 	
-	// For now, just return a simple success response
-	std::cout << "DEBUG: Generating simple success response" << std::endl;
-	response.setStatus(200);
-	response.setBody("<html><body><h1>Hello from WebServ!</h1>"
-	                 "<p>Your request was processed successfully.</p>"
-	                 "<p>Method: " + _method + "</p>"
-	                 "<p>Path: " + _path + "</p>"
-	                 "</body></html>");
-	response.addHeader("Content-Type", "text/html");
-	
-	return response;
+	// Handle different HTTP methods
+	if (_method == "GET")
+	{
+		return handleGet(*location, response, config);
+	}
+	else if (_method == "POST")
+	{
+		return handlePost(*location, response, config);
+	}
+	else if (_method == "DELETE")
+	{
+		return handleDelete(*location, response, config);
+	}
+	else
+	{
+		std::cout << "DEBUG: Unsupported method " << _method << std::endl;
+		response.setStatus(501);
+		response.setBody(config.getDefaultErrorPage(501));
+		return response;
+	}
 }
 
 /**
@@ -544,4 +557,427 @@ const std::map<std::string, std::string>&	HttpRequest::getHeaders(void) const
 const std::string&	HttpRequest::getBody(void) const
 {
 	return _body;
+}
+
+/**
+ * Handle GET request for static file serving
+ */
+HttpResponse	HttpRequest::handleGet(const LocationConfig& location, 
+	HttpResponse& response, const Config& config)
+{
+	std::cout << "DEBUG: Handling GET request for " << _path << std::endl;
+	
+	// Build the full file path
+	std::string fullPath = location.root + _path;
+	
+	// Check for path traversal attacks
+	if (!isPathSafe(_path, location.root))
+	{
+		std::cout << "DEBUG: Path traversal detected: " << _path << std::endl;
+		response.setStatus(403);
+		response.setBody(config.getDefaultErrorPage(403));
+		return response;
+	}
+	
+	// If path ends with '/', try to serve index file
+	if (!_path.empty() && _path[_path.length() - 1] == '/')
+	{
+		if (!location.index.empty())
+		{
+			fullPath += location.index;
+		}
+		else
+		{
+			fullPath += "index.html";
+		}
+	}
+	
+	// Try to open and read the file
+	std::ifstream file(fullPath.c_str(), std::ios::binary);
+	
+	if (!file.is_open())
+	{
+		std::cout << "DEBUG: File not found: " << fullPath << std::endl;
+		
+		// If autoindex is enabled and it's a directory, show directory listing
+		if (location.autoindex && !_path.empty() && _path[_path.length() - 1] == '/')
+		{
+			return generateDirectoryListing(location, response);
+		}
+		
+		response.setStatus(404);
+		response.setBody(config.getDefaultErrorPage(404));
+		return response;
+	}
+	
+	// Read file content
+	std::string content((std::istreambuf_iterator<char>(file)), 
+	                   std::istreambuf_iterator<char>());
+	file.close();
+	
+	std::cout << "DEBUG: Successfully read " << content.size() 
+	    << " bytes from " << fullPath << std::endl;
+	
+	// Set response
+	response.setStatus(200);
+	response.setBody(content);
+	response.addHeader("Content-Type", getMimeType(fullPath));
+	
+	return response;
+}
+
+/**
+ * Handle POST request for file uploads
+ */
+HttpResponse	HttpRequest::handlePost(const LocationConfig& location, 
+	HttpResponse& response, const Config& config)
+{
+	std::cout << "DEBUG: Handling POST request for " << _path << std::endl;
+	
+	// Check if upload is allowed for this location
+	if (location.uploadStore.empty())
+	{
+		std::cout << "DEBUG: Upload not allowed for this location" << std::endl;
+		response.setStatus(403);
+		response.setBody(config.getDefaultErrorPage(403));
+		return response;
+	}
+	
+	// Parse Content-Type header to handle multipart/form-data
+	std::string contentType = getHeader("Content-Type");
+	
+	if (contentType.find("multipart/form-data") != std::string::npos)
+	{
+		return handleFileUpload(location, response, config);
+	}
+	else if (contentType.find("application/x-www-form-urlencoded") != std::string::npos)
+	{
+		return handleFormData(location, response, config);
+	}
+	else
+	{
+		// Simple file upload - treat body as raw file content
+		std::ostringstream oss;
+		oss << "upload_" << time(NULL);
+		std::string filename = oss.str();
+		std::string uploadPath = location.uploadStore + "/" + filename;
+		
+		std::ofstream file(uploadPath.c_str(), std::ios::binary);
+		if (!file.is_open())
+		{
+			std::cout << "DEBUG: Failed to create upload file: " << uploadPath << std::endl;
+			response.setStatus(500);
+			response.setBody(config.getDefaultErrorPage(500));
+			return response;
+		}
+		
+		file.write(_body.c_str(), _body.size());
+		file.close();
+		
+		std::cout << "DEBUG: Successfully uploaded " << _body.size() 
+		    << " bytes to " << uploadPath << std::endl;
+		
+		response.setStatus(201);
+		std::ostringstream sizeOss;
+		sizeOss << _body.size();
+		response.setBody("<html><body><h1>Upload Successful</h1>"
+		                "<p>File uploaded as: " + filename + "</p>"
+		                "<p>Size: " + sizeOss.str() + " bytes</p>"
+		                "</body></html>");
+		response.addHeader("Content-Type", "text/html");
+	}
+	
+	return response;
+}
+
+/**
+ * Handle DELETE request for file deletion
+ */
+HttpResponse	HttpRequest::handleDelete(const LocationConfig& location, 
+	HttpResponse& response, const Config& config)
+{
+	std::cout << "DEBUG: Handling DELETE request for " << _path << std::endl;
+	
+	// Build the full file path
+	std::string fullPath = location.root + _path;
+	
+	// Check for path traversal attacks
+	if (!isPathSafe(_path, location.root))
+	{
+		std::cout << "DEBUG: Path traversal detected: " << _path << std::endl;
+		response.setStatus(403);
+		response.setBody(config.getDefaultErrorPage(403));
+		return response;
+	}
+	
+	// Check if file exists
+	std::ifstream file(fullPath.c_str());
+	if (!file.good())
+	{
+		std::cout << "DEBUG: File not found for deletion: " << fullPath << std::endl;
+		response.setStatus(404);
+		response.setBody(config.getDefaultErrorPage(404));
+		return response;
+	}
+	file.close();
+	
+	// Try to delete the file
+	if (std::remove(fullPath.c_str()) != 0)
+	{
+		std::cout << "DEBUG: Failed to delete file: " << fullPath << std::endl;
+		response.setStatus(500);
+		response.setBody(config.getDefaultErrorPage(500));
+		return response;
+	}
+	
+	std::cout << "DEBUG: Successfully deleted file: " << fullPath << std::endl;
+	
+	response.setStatus(204); // No Content
+	return response;
+}
+
+/**
+ * Get MIME type for file extension
+ */
+std::string	HttpRequest::getMimeType(const std::string& filename) const
+{
+	size_t dotPos = filename.find_last_of('.');
+	if (dotPos == std::string::npos)
+		return "application/octet-stream";
+	
+	std::string ext = filename.substr(dotPos + 1);
+	
+	// Convert to lowercase for comparison
+	for (size_t i = 0; i < ext.length(); ++i)
+		ext[i] = std::tolower(ext[i]);
+	
+	if (ext == "html" || ext == "htm")
+		return "text/html";
+	else if (ext == "css")
+		return "text/css";
+	else if (ext == "js")
+		return "application/javascript";
+	else if (ext == "json")
+		return "application/json";
+	else if (ext == "xml")
+		return "application/xml";
+	else if (ext == "txt")
+		return "text/plain";
+	else if (ext == "jpg" || ext == "jpeg")
+		return "image/jpeg";
+	else if (ext == "png")
+		return "image/png";
+	else if (ext == "gif")
+		return "image/gif";
+	else if (ext == "svg")
+		return "image/svg+xml";
+	else if (ext == "ico")
+		return "image/x-icon";
+	else if (ext == "pdf")
+		return "application/pdf";
+	else if (ext == "zip")
+		return "application/zip";
+	else if (ext == "mp4")
+		return "video/mp4";
+	else if (ext == "mp3")
+		return "audio/mpeg";
+	else
+		return "application/octet-stream";
+}
+
+/**
+ * Check if path is safe and within allowed directory
+ */
+bool	HttpRequest::isPathSafe(const std::string& path, const std::string& root) const
+{
+	(void)root; // Unused parameter
+	
+	// Check for path traversal patterns
+	if (path.find("..") != std::string::npos)
+		return false;
+	
+	// Check for absolute paths trying to escape root
+	if (path.find("/..") != std::string::npos)
+		return false;
+	
+	// Check for null bytes
+	if (path.find('\0') != std::string::npos)
+		return false;
+	
+	return true;
+}
+
+/**
+ * Generate directory listing for autoindex
+ */
+HttpResponse	HttpRequest::generateDirectoryListing(const LocationConfig& location, 
+	HttpResponse& response)
+{
+	std::cout << "DEBUG: Generating directory listing for " << _path << std::endl;
+	
+	std::string dirPath = location.root + _path;
+	DIR* dir = opendir(dirPath.c_str());
+	
+	if (!dir)
+	{
+		std::cout << "DEBUG: Failed to open directory: " << dirPath << std::endl;
+		response.setStatus(403);
+		return response;
+	}
+	
+	std::ostringstream html;
+	html << "<!DOCTYPE html>\n<html>\n<head>\n";
+	html << "<title>Index of " << _path << "</title>\n";
+	html << "<style>body{font-family:Arial,sans-serif;margin:40px;}</style>\n";
+	html << "</head>\n<body>\n";
+	html << "<h1>Index of " << _path << "</h1>\n<hr>\n<pre>\n";
+	
+	if (_path != "/")
+	{
+		html << "<a href=\"../\">../</a>\n";
+	}
+	
+	struct dirent* entry;
+	while ((entry = readdir(dir)) != NULL)
+	{
+		if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+			continue;
+		
+		std::string fullItemPath = dirPath + "/" + entry->d_name;
+		struct stat statBuf;
+		
+		if (stat(fullItemPath.c_str(), &statBuf) == 0)
+		{
+			html << "<a href=\"" << entry->d_name;
+			if (S_ISDIR(statBuf.st_mode))
+				html << "/";
+			html << "\">" << entry->d_name;
+			if (S_ISDIR(statBuf.st_mode))
+				html << "/";
+			html << "</a>\n";
+		}
+	}
+	
+	html << "</pre>\n<hr>\n</body>\n</html>";
+	closedir(dir);
+	
+	response.setStatus(200);
+	response.setBody(html.str());
+	response.addHeader("Content-Type", "text/html");
+	
+	return response;
+}
+
+/**
+ * Handle multipart/form-data file upload
+ */
+HttpResponse	HttpRequest::handleFileUpload(const LocationConfig& location, 
+	HttpResponse& response, const Config& config)
+{
+	std::cout << "DEBUG: Handling multipart file upload" << std::endl;
+	
+	// Parse boundary from Content-Type header
+	std::string contentType = getHeader("Content-Type");
+	size_t boundaryPos = contentType.find("boundary=");
+	
+	if (boundaryPos == std::string::npos)
+	{
+		std::cout << "DEBUG: No boundary found in multipart data" << std::endl;
+		response.setStatus(400);
+		response.setBody(config.getDefaultErrorPage(400));
+		return response;
+	}
+	
+	std::string boundary = "--" + contentType.substr(boundaryPos + 9);
+	std::cout << "DEBUG: Using boundary: " << boundary << std::endl;
+	
+	// Simple multipart parsing - find file content between boundaries
+	size_t startPos = _body.find(boundary);
+	if (startPos == std::string::npos)
+	{
+		response.setStatus(400);
+		response.setBody(config.getDefaultErrorPage(400));
+		return response;
+	}
+	
+	// Find filename in headers
+	size_t filenamePos = _body.find("filename=\"", startPos);
+	std::string filename = "uploaded_file";
+	
+	if (filenamePos != std::string::npos)
+	{
+		size_t filenameStart = filenamePos + 10;
+		size_t filenameEnd = _body.find("\"", filenameStart);
+		if (filenameEnd != std::string::npos)
+		{
+			filename = _body.substr(filenameStart, filenameEnd - filenameStart);
+		}
+	}
+	
+	// Find file content (after double CRLF)
+	size_t contentStart = _body.find("\r\n\r\n", startPos);
+	if (contentStart == std::string::npos)
+	{
+		response.setStatus(400);
+		response.setBody(config.getDefaultErrorPage(400));
+		return response;
+	}
+	contentStart += 4;
+	
+	// Find end boundary
+	size_t contentEnd = _body.find("\r\n--", contentStart);
+	if (contentEnd == std::string::npos)
+		contentEnd = _body.length();
+	
+	std::string fileContent = _body.substr(contentStart, contentEnd - contentStart);
+	
+	// Save file
+	std::string uploadPath = location.uploadStore + "/" + filename;
+	std::ofstream file(uploadPath.c_str(), std::ios::binary);
+	
+	if (!file.is_open())
+	{
+		std::cout << "DEBUG: Failed to create upload file: " << uploadPath << std::endl;
+		response.setStatus(500);
+		response.setBody(config.getDefaultErrorPage(500));
+		return response;
+	}
+	
+	file.write(fileContent.c_str(), fileContent.size());
+	file.close();
+	
+	std::cout << "DEBUG: Successfully uploaded " << fileContent.size() 
+	    << " bytes to " << uploadPath << std::endl;
+	
+	response.setStatus(201);
+	std::ostringstream sizeOss;
+	sizeOss << fileContent.size();
+	response.setBody("<html><body><h1>File Upload Successful</h1>"
+	                "<p>Filename: " + filename + "</p>"
+	                "<p>Size: " + sizeOss.str() + " bytes</p>"
+	                "</body></html>");
+	response.addHeader("Content-Type", "text/html");
+	
+	return response;
+}
+
+/**
+ * Handle application/x-www-form-urlencoded data
+ */
+HttpResponse	HttpRequest::handleFormData(const LocationConfig& location, 
+	HttpResponse& response, const Config& config)
+{
+	(void)location; // Unused parameter
+	(void)config;   // Unused parameter
+	
+	std::cout << "DEBUG: Handling form data" << std::endl;
+	
+	response.setStatus(200);
+	response.setBody("<html><body><h1>Form Data Received</h1>"
+	                "<p>Form processing not yet implemented.</p>"
+	                "<p>Received " + _body + "</p>"
+	                "</body></html>");
+	response.addHeader("Content-Type", "text/html");
+	
+	return response;
 }
