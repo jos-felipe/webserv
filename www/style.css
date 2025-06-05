@@ -1,0 +1,17 @@
+/* Test CSS file for WebServ */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 20px;
+}
+
+h1 {
+    color: #333;
+    border-bottom: 2px solid #ddd;
+}
+
+.test-class {
+    padding: 10px;
+    background-color: white;
+    border-radius: 5px;
+}
