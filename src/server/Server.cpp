@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/06/03 14:15:07 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/06/10 12:46:24 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@
 /**
  * Default constructor initializes an empty server
  */
-Server::Server(void) : _config(NULL), _maxFd(0)
+Server::Server(void) : _config(NULL), _maxFd(-1)
 {
 	FD_ZERO(&_readFds);
 	FD_ZERO(&_writeFds);
@@ -31,7 +31,7 @@ Server::Server(void) : _config(NULL), _maxFd(0)
 /**
  * Constructor initializes server with provided configuration
  */
-Server::Server(const Config& config) : _config(&config), _maxFd(0)
+Server::Server(const Config& config) : _config(&config), _maxFd(-1)
 {
 	FD_ZERO(&_readFds);
 	FD_ZERO(&_writeFds);
@@ -332,15 +332,6 @@ void Server::sendResponses(fd_set *writeFdsReady)
     }
 }
 /**
- * Check for and remove idle connections that have timed out
- */
-void	Server::checkTimeouts(void)
-{
-	// Implementation would check timestamps of connections
-	// and remove those that exceed timeout threshold
-}
-
-/**
  * Start the server by initializing sockets
  */
 void	Server::start(void)
@@ -365,15 +356,19 @@ void	Server::run(void)
     errorFdsCopy = _errorFds;
     
     // Show which file descriptors we're monitoring
-    std::cout << "DEBUG: select() monitoring " << _maxFd + 1 
-        << " file descriptors" << std::endl;
-    
-    struct timeval timeout;
-    timeout.tv_sec = 1;
-    timeout.tv_usec = 0;
+    int actualFdCount = 0;
+    for (int i = 0; i <= _maxFd; i++) {
+        if (FD_ISSET(i, &_readFds) || FD_ISSET(i, &_writeFds)) {
+            std::cout << "DEBUG: Monitoring fd " << i << std::endl;
+            actualFdCount++;
+        }
+    }
+    std::cout << "DEBUG: select() checking range 0-" << _maxFd 
+        << " (" << _maxFd + 1 << " total), actually monitoring " 
+        << actualFdCount << " file descriptors" << std::endl;
     
     int activity = select(_maxFd + 1, &readFdsCopy, &writeFdsCopy, 
-        &errorFdsCopy, &timeout);
+        &errorFdsCopy, NULL);
     
     if (activity < 0)
     {
@@ -394,7 +389,6 @@ void	Server::run(void)
     acceptConnections(&readFdsCopy);
     handleRequests(&readFdsCopy);
     sendResponses(&writeFdsCopy);
-    checkTimeouts();
 }
 
 /**

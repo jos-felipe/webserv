@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:45:21 by josfelip          #+#    #+#             */
-/*   Updated: 2025/06/03 14:05:30 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/06/10 12:41:42 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,12 +63,7 @@ private:
 	 */
 	void			sendResponses(fd_set *writeFdsReady);
 	
-	/**
-	 * Check for and remove timed out connections
-	 */
-	void			checkTimeouts(void);
-	
-	/**
+		/**
 	 * Copy constructor - private to prevent copying
 	 */
 	Server(const Server& other);
