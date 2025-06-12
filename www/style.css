@@ -196,3 +196,55 @@ ul li {
 ul li:last-child {
   border-bottom: none;
 }
+
+/* Estilo para página genérica de erro 5xx */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background-color: #000;
+  color: #fff;
+  font-family: Arial, sans-serif;
+}
+
+.error-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+  gap: 10px; /* espaçamento entre os elementos */
+}
+
+.error-image {
+  max-height: 40vh;
+  width: auto;
+  height: auto;
+}
+
+.error-code {
+  font-size: 3rem;
+  font-weight: bold;
+  color: white;
+}
+
+.error-container h2 {
+  font-size: 1.5rem;
+}
+
+a {
+  color: #1e90ff;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
