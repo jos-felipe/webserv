@@ -1,17 +1,198 @@
-/* Test CSS file for WebServ */
+/* === Base (cores, fontes, layout geral) === */
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
-    margin: 20px;
+  margin: 0;
+  padding: 40px 20px;
+  background-color: #000;
+  color: #fff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-h1 {
-    color: #333;
-    border-bottom: 2px solid #ddd;
+h1, h2 {
+  text-align: center;
+  color: #fff;
 }
 
-.test-class {
-    padding: 10px;
-    background-color: white;
-    border-radius: 5px;
+p {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 1rem;
+}
+
+a {
+  color: #1e90ff;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* === Menu Sanduíche / Navbar === */
+.navbar {
+  background-color: #111;
+  padding: 10px 20px;
+  position: relative;
+}
+
+.menu-toggle {
+  font-size: 28px;
+  color: #1e90ff;
+  cursor: pointer;
+  display: none;
+}
+
+.nav-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.nav-links li a {
+  color: #fff;
+}
+
+.nav-links li a:hover {
+  color: #1e90ff;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .menu-toggle {
+    display: block;
+  }
+
+  .nav-links {
+    display: none;
+    flex-direction: column;
+    background-color: #111;
+    position: absolute;
+    top: 50px;
+    left: 0;
+    width: 100%;
+    padding: 10px 0;
+    border-top: 1px solid #1e90ff;
+  }
+
+  .nav-links.active {
+    display: flex;
+  }
+
+  .nav-links li {
+    text-align: center;
+    padding: 10px 0;
+  }
+}
+
+/* === Página: 404.html === */
+.error-image {
+  display: block;
+  margin: 0 auto 20px auto;
+  max-width: 100%;
+  height: auto;
+}
+
+
+/* === Página: Upload.html === */
+.upload-form {
+  background-color: #111;
+  border: 1px solid #333;
+  padding: 20px;
+  margin: 30px auto;
+  max-width: 500px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  text-align: center;
+}
+
+
+label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+input[type="file"],
+input[type="text"],
+button {
+  display: block;
+  margin: 10px auto;
+  padding: 10px;
+  width: 80%; /* Ajustável */
+  max-width: 400px;
+  background-color: #222;
+  border: 1px solid #555;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+button {
+  background-color: #1e90ff;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background-color: #1c86ee;
+}
+
+
+/* === Página: index.html === */
+.success {
+  background-color: #0f0f0f;
+  border: 1px solid #1e90ff;
+  padding: 20px;
+  margin: 30px auto;
+  max-width: 600px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 0 10px rgba(30, 144, 255, 0.4);
+}
+
+.success strong {
+  color: #1e90ff;
+  font-size: 1.2rem;
+}
+
+.success .icon {
+  font-size: 3rem;
+  margin-bottom: 10px;
+  animation: popIn 0.6s ease;
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* === Lista de links comuns === */
+ul {
+  max-width: 500px;
+  margin: 20px auto;
+  padding: 0;
+  list-style-type: none;
+  border-top: 1px solid #333;
+  border-bottom: 1px solid #333;
+}
+
+ul li {
+  padding: 10px;
+  border-bottom: 1px solid #222;
+  text-align: center;
+}
+
+ul li:last-child {
+  border-bottom: none;
 }
