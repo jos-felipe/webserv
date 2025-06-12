@@ -29,61 +29,45 @@ a:hover {
 }
 
 /* === Menu Sanduíche / Navbar === */
+/* ==== Navbar Horizontal Responsiva ==== */
+
 .navbar {
   background-color: #111;
-  padding: 10px 20px;
-  position: relative;
-}
-
-.menu-toggle {
-  font-size: 28px;
-  color: #1e90ff;
-  cursor: pointer;
-  display: none;
+  padding: 15px 20px;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.5);
 }
 
 .nav-links {
   list-style: none;
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
   padding: 0;
   margin: 0;
-  display: flex;
-  gap: 20px;
-  justify-content: center;
-  flex-wrap: wrap;
 }
 
 .nav-links li a {
   color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.2s ease;
 }
 
 .nav-links li a:hover {
   color: #1e90ff;
 }
 
-/* Responsivo */
-@media (max-width: 768px) {
-  .menu-toggle {
-    display: block;
-  }
-
+/* Responsivo: colapsa em colunas */
+@media (max-width: 600px) {
   .nav-links {
-    display: none;
     flex-direction: column;
-    background-color: #111;
-    position: absolute;
-    top: 50px;
-    left: 0;
-    width: 100%;
-    padding: 10px 0;
-    border-top: 1px solid #1e90ff;
-  }
-
-  .nav-links.active {
-    display: flex;
-  }
-
-  .nav-links li {
-    text-align: center;
+    align-items: center;
+    gap: 15px;
     padding: 10px 0;
   }
 }
