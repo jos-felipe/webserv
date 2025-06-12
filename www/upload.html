@@ -2,16 +2,19 @@
 <html>
 <head>
     <title>File Upload Test</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; }
-        .upload-form { background: #f9f9f9; padding: 20px; border-radius: 8px; }
-        input[type="file"] { margin: 10px 0; }
-        button { background: #007cba; color: white; padding: 10px 20px; border: none; border-radius: 4px; }
-    </style>
+     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+<nav class="navbar">
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="upload.html">Upload</a></li>
+    <li><a href="404.html">Erro 404</a></li>
+    <li><a href="50x.html">Erro 500</a></li>
+  </ul>
+</nav>
+
     <h1>WebServ File Upload Test</h1>
-    
     <div class="upload-form">
         <h2>Upload a file</h2>
         <form action="/" method="post" enctype="multipart/form-data">
@@ -31,13 +34,5 @@
             <button type="submit">Send Data</button>
         </form>
     </div>
-    
-    <h2>Test Links</h2>
-    <ul>
-        <li><a href="/">Home (index.html)</a></li>
-        <li><a href="/test.txt">Text file</a></li>
-        <li><a href="/style.css">CSS file</a></li>
-        <li><a href="/nonexistent.html">404 Test</a></li>
-    </ul>
 </body>
 </html>
