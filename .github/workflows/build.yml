@@ -17,7 +17,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential g++
+        sudo apt-get install -y build-essential g++ php-cgi python3 curl
     
     - name: Create directory structure
       run: |
@@ -60,9 +60,10 @@ jobs:
           echo "SUCCESS: No relinking detected."
         fi
     
-    # Uncomment when you have tests ready
-    # - name: Run tests
-    #   run: make test
+    - name: Run CGI tests
+      run: |
+        chmod +x test_simple_cgi.sh
+        ./test_simple_cgi.sh
 
   code-style:
     runs-on: ubuntu-latest
@@ -75,7 +76,7 @@ jobs:
       run: |
         missing_headers=0
         for file in $(find . -name "*.cpp" -o -name "*.hpp"); do
-          if ! head -15 "$file" | grep -q "By: josfelip <josfelip@student.42sp.org.br>"; then
+          if ! head -15 "$file" | grep -E "By: (josfelip|tsantana|asanni)" >/dev/null; then
             echo "Missing or incorrect 42 header in $file"
             missing_headers=1
           fi
