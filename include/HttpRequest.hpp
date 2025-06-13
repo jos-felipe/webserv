@@ -18,6 +18,7 @@
 # include "Socket.hpp"
 # include "Config.hpp"
 # include "HttpResponse.hpp"
+# include "CgiHandler.hpp"
 
 /**
  * @enum ParseState
@@ -136,6 +137,12 @@ private:
 	 */
 	HttpResponse						handleFormData(const LocationConfig& location, 
 													HttpResponse& response, const Config& config);
+	
+	/**
+	 * Handle CGI request execution
+	 */
+	HttpResponse						handleCgi(const LocationConfig& location, 
+												HttpResponse& response, const Config& config);
 
 public:
 	/**

@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "HttpRequest.hpp"
+#include "CgiHandler.hpp"
 #include <sstream>
 #include <algorithm>
 #include <cctype>
@@ -579,6 +580,13 @@ HttpResponse	HttpRequest::handleGet(const LocationConfig& location,
 		return response;
 	}
 	
+	// Check if this is a CGI request
+	if (CgiHandler::isCgiFile(fullPath, location))
+	{
+		std::cout << "DEBUG: Detected CGI file, delegating to CGI handler" << std::endl;
+		return handleCgi(location, response, config);
+	}
+	
 	// If path ends with '/', try to serve index file
 	if (!_path.empty() && _path[_path.length() - 1] == '/')
 	{
@@ -633,6 +641,16 @@ HttpResponse	HttpRequest::handlePost(const LocationConfig& location,
 	HttpResponse& response, const Config& config)
 {
 	std::cout << "DEBUG: Handling POST request for " << _path << std::endl;
+	
+	// Build the full file path to check for CGI
+	std::string fullPath = location.root + _path;
+	
+	// Check if this is a CGI request
+	if (CgiHandler::isCgiFile(fullPath, location))
+	{
+		std::cout << "DEBUG: Detected CGI file, delegating to CGI handler" << std::endl;
+		return handleCgi(location, response, config);
+	}
 	
 	// Check if upload is allowed for this location
 	if (location.uploadStore.empty())
@@ -980,4 +998,40 @@ HttpResponse	HttpRequest::handleFormData(const LocationConfig& location,
 	response.addHeader("Content-Type", "text/html");
 	
 	return response;
+}
+
+/**
+ * Handle CGI request execution
+ */
+HttpResponse	HttpRequest::handleCgi(const LocationConfig& location, 
+	HttpResponse& response, const Config& config)
+{
+	(void)config; // May be used for additional configuration
+	
+	std::cout << "DEBUG: Handling CGI request for " << _path << std::endl;
+	
+	// Build the full script path
+	std::string scriptPath = location.root + _path;
+	
+	// Check for path traversal attacks
+	if (!isPathSafe(_path, location.root))
+	{
+		std::cout << "DEBUG: Path traversal detected: " << _path << std::endl;
+		response.setStatus(403);
+		response.setBody("Forbidden: Path traversal detected");
+		return response;
+	}
+	
+	// Check if it's a CGI file
+	if (!CgiHandler::isCgiFile(scriptPath, location))
+	{
+		std::cout << "DEBUG: File is not a CGI script: " << scriptPath << std::endl;
+		response.setStatus(403);
+		response.setBody("Forbidden: Not a CGI script");
+		return response;
+	}
+	
+	// Use CgiHandler to execute the script
+	CgiHandler cgiHandler;
+	return cgiHandler.handleCgiRequest(*this, location, scriptPath);
 }
