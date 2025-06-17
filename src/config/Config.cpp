@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42sp.org.br>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:20:34 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/02 21:05:12 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/06/17 17:44:00 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -399,14 +399,53 @@ const ServerConfig* Config::findServer(const std::string& host, int port,
 /**
  * Get default error page for status code
  */
-std::string	Config::getDefaultErrorPage(int statusCode) const
+std::string Config::getDefaultErrorPage(int statusCode) const
 {
-	std::string defaultPage;
-	
-	// Create basic HTML for the error
-	std::ostringstream oss;
-	oss << "<html><head><title>Error " << statusCode << "</title></head>"
-		<< "<body><h1>Error " << statusCode << "</h1></body></html>";
-		
-	return oss.str();
+    // percorre todos os servidores
+    for (size_t i = 0; i < _servers.size(); ++i)
+    {
+        const ServerConfig& server = _servers[i];
+
+        //existe error_page explícito p/ este código?
+        std::map<int, std::string>::const_iterator it = server.errorPages.find(statusCode);
+        if (it == server.errorPages.end())
+            continue;                
+
+        const std::string& confPath = it->second;     
+
+        //descobre qual root utilizar (pega o location "/")
+        std::string rootDir;
+        for (size_t j = 0; j < server.locations.size(); ++j)
+        {
+            if (server.locations[j].path == "/") {
+                rootDir = server.locations[j].root;
+                break;
+            }
+        }
+        if (rootDir.empty())
+            rootDir = ".";
+						
+        std::string fullPath;
+        if (confPath.size() && confPath[0] == '/')     
+            fullPath = rootDir + confPath;
+        else
+            fullPath = confPath;
+
+        //tenta abrir o arquivo
+        std::ifstream file(fullPath.c_str(), std::ios::in | std::ios::binary);
+        if (file.is_open())
+        {
+            std::ostringstream ss;
+            ss << file.rdbuf();
+            return ss.str();
+        }
+        std::cerr << "WARNING: não foi possível abrir página de erro '"
+                  << fullPath  << ")\n";
+        
+    }
+    // se falhar, continua para a error page embutida
+    std::ostringstream oss;
+    oss << "<html><head><title>Error " << statusCode << "</title></head>"
+        << "<body><h1>Error " << statusCode << "</h1></body></html>";
+    return oss.str();
 }
