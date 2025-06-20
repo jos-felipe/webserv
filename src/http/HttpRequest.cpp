@@ -23,6 +23,7 @@
 #include <ctime>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 
 /**
  * Constructor initializes parsing state
@@ -680,6 +681,8 @@ HttpResponse	HttpRequest::handlePost(const LocationConfig& location,
 		std::string filename = oss.str();
 		std::string uploadPath = location.uploadStore + "/" + filename;
 		
+		// Garante que o diretório de upload existe
+		mkdir(location.uploadStore.c_str(), 0777);
 		std::ofstream file(uploadPath.c_str(), std::ios::binary);
 		if (!file.is_open())
 		{
