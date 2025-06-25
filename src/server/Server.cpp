@@ -199,6 +199,13 @@ void	Server::handleRequests(fd_set *readFdsReady)
 					FD_CLR(clientFd, &_readFds);
 					FD_SET(clientFd, &_writeFds);
 				}
+				else
+				{
+					// Connection was closed or error occurred
+					std::cout << "DEBUG: Connection closed or error on fd " << clientFd 
+						<< ", marking for removal" << std::endl;
+					toRemove.push_back(clientFd);
+				}
 			}
 			catch (const std::exception& e)
 			{
@@ -359,7 +366,15 @@ void	Server::run(void)
     int actualFdCount = 0;
     for (int i = 0; i <= _maxFd; i++) {
         if (FD_ISSET(i, &_readFds) || FD_ISSET(i, &_writeFds)) {
-            std::cout << "DEBUG: Monitoring fd " << i << std::endl;
+            std::cout << "DEBUG: Monitoring fd " << i;
+            if (FD_ISSET(i, &_readFds) && FD_ISSET(i, &_writeFds)) {
+                std::cout << " (read+write)";
+            } else if (FD_ISSET(i, &_readFds)) {
+                std::cout << " (read)";
+            } else {
+                std::cout << " (write)";
+            }
+            std::cout << std::endl;
             actualFdCount++;
         }
     }
