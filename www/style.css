@@ -1,11 +1,12 @@
 /* === Base (cores, fontes, layout geral) === */
 body {
   margin: 0;
-  padding: 40px 20px;
+  padding: 90px 20px 40px; /* top 70px para compensar a navbar fixa */
   background-color: #000;
   color: #fff;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
+
 
 h1, h2 {
   text-align: center;
