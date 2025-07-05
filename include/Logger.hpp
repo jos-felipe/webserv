@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Logger.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: asanni <asanni@student.42sp.org.br>        +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/06/30 17:12:57 by asanni            #+#    #+#             */
-/*   Updated: 2025/06/30 17:39:14 by asanni           ###   ########.fr       */
+/*   Created: 2025/07/05 14:17:10 by asanni            #+#    #+#             */
+/*   Updated: 2025/07/05 14:17:14 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,13 +34,13 @@ public:
 
 	void setLevel(LogLevel level);
 	LogLevel getLevel(void) const;
+
 	void log(LogLevel level, const std::string& message) const;
+
+	// Métodos convenientes por nível:
+	void error(const std::string& message) const;
+	void info(const std::string& message) const;
+	void debug(const std::string& message) const;
 };
-
-extern Logger g_logger;
-
-# define LOG_ERROR(logger, msg) if ((logger).getLevel() >= LOG_ERROR) (logger).log(LOG_ERROR, msg)
-# define LOG_INFO(logger, msg)  if ((logger).getLevel() >= LOG_INFO)  (logger).log(LOG_INFO, msg)
-# define LOG_DEBUG(logger, msg) if ((logger).getLevel() >= LOG_DEBUG) (logger).log(LOG_DEBUG, msg)
 
 #endif

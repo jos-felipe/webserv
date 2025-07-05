@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: asanni <asanni@student.42sp.org.br>        +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:45:21 by josfelip          #+#    #+#             */
-/*   Updated: 2025/06/30 17:45:04 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/05 17:20:56 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 # include "Socket.hpp"
 # include "HttpRequest.hpp"
 # include "HttpResponse.hpp"
+# include "Logger.hpp"
 
 /**
  * @class Server
@@ -34,6 +35,7 @@ class Server
 {
 private:
 	const Config*				_config;  // Changed to pointer to allow default constructor
+	Logger*						_logger; 
 	std::vector<Socket>			_listenSockets;
 	std::map<int, Socket>		_clientSockets;
 	std::map<int, HttpRequest>	_requests;
@@ -82,7 +84,7 @@ public:
 	/**
 	 * Constructor with configuration
 	 */
-	Server(const Config& config);
+	Server(const Config& config, Logger& logger);
 	
 	/**
 	 * Destructor

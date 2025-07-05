@@ -3,16 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   Config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:10:12 by josfelip          #+#    #+#             */
-/*   Updated: 2025/03/31 23:18:57 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/07/05 16:18:23 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CONFIG_HPP
 # define CONFIG_HPP
 
+# include "Logger.hpp"
 # include <string>
 # include <vector>
 # include <map>
@@ -65,6 +66,7 @@ class Config
 private:
 	std::string					_configPath;
 	std::vector<ServerConfig>	_servers;
+	Logger						_logger;
 	
 	/**
 	 * Parse the configuration file
@@ -102,7 +104,7 @@ public:
 	/**
 	 * Constructor with path to configuration file
 	 */
-	Config(const std::string& configPath);
+	Config(const std::string& configPath, Logger& logger);
 	
 	/**
 	 * Copy constructor

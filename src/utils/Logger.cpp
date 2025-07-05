@@ -3,17 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   Logger.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: asanni <asanni@student.42sp.org.br>        +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/30 17:23:07 by asanni            #+#    #+#             */
-/*   Updated: 2025/06/30 17:39:44 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/05 14:18:09 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Logger.hpp"
 #include <iostream>
-
-Logger g_logger;
 
 Logger::Logger(void) : _level(LOG_INFO) {}
 
@@ -47,4 +45,19 @@ void Logger::log(LogLevel level, const std::string& message) const {
 			std::cout << "[DEBUG] " << message << std::endl;
 			break;
 	}
+}
+
+void Logger::error(const std::string& message) const {
+	if (_level >= LOG_ERROR)
+		log(LOG_ERROR, message);
+}
+
+void Logger::info(const std::string& message) const {
+	if (_level >= LOG_INFO)
+		log(LOG_INFO, message);
+}
+
+void Logger::debug(const std::string& message) const {
+	if (_level >= LOG_DEBUG)
+		log(LOG_DEBUG, message);
 }

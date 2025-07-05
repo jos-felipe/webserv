@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: asanni <asanni@student.42sp.org.br>        +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:29:42 by josfelip          #+#    #+#             */
-/*   Updated: 2025/06/30 17:44:43 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/05 16:07:00 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,47 +50,44 @@ void	displayUsage(const char *programName)
 /**
  * Main function - entry point for the webserver
  */
+#include "Logger.hpp"
+#include "Config.hpp"
+#include "Server.hpp"
+
 int main(int argc, char **argv)
 {
-    std::string configPath = "./conf/default.conf";
+	std::string configPath = "./conf/default.conf";
 
-    if (argc > 2)
-    {
-        displayUsage(argv[0]);
-        return (EXIT_FAILURE);
-    }
-    else if (argc == 2)
-        configPath = argv[1];
+	if (argc > 2) {
+		displayUsage(argv[0]);
+		return EXIT_FAILURE;
+	} else if (argc == 2)
+		configPath = argv[1];
 
-    Logger logger;
-    logger.setLevel(LOG_DEBUG);
+	try {
+		Logger logger;                     // ✅ Logger local
+		logger.setLevel(LOG_INFO);        // ou LOG_DEBUG, dependendo do que quer ver
 
-    try
-    {
-        Config config(configPath);
+		Config config(configPath, logger);
+		setupSignals();
 
-        setupSignals();
+		Server server(config, logger);    // ✅ Injetando logger local
 
-        // Cria o servidor
-        Server server(config);
+		logger.info("Starting server...");
+		server.start();
 
-        // Se você alterou o Server para receber Logger, passe ele aqui
-        // Por exemplo, server.setLogger(&logger); se tiver método assim
+		while (g_running)
+			server.run();
 
-        logger.log(LOG_INFO, "Starting server...");
-        server.start();
+		server.stop();
+		logger.info("Server stopped.");
 
-        while (g_running)
-            server.run();
-
-        server.stop();
-        logger.log(LOG_INFO, "Server stopped.");
-
-        return (EXIT_SUCCESS);
-    }
-    catch (const std::exception &e)
-    {
-        logger.log(LOG_ERROR, std::string("Error: ") + e.what());
-        return (EXIT_FAILURE);
-    }
+		return EXIT_SUCCESS;
+	}
+	catch (const std::exception &e) {
+		Logger logger;                    // ✅ Logger local em caso de erro
+		logger.setLevel(LOG_ERROR);
+		logger.error(std::string("Error: ") + e.what());
+		return EXIT_FAILURE;
+	}
 }
