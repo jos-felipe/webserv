@@ -83,7 +83,10 @@ re: fclean all
 debug:
 	@make WITH_DEBUG=TRUE --no-print-directory
 
+run: all
+	./$(NAME)
+
 # Include dependency files
 -include $(DEP)
 
-.PHONY: all clean fclean re debug
+.PHONY: all clean fclean re debug run
