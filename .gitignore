@@ -33,6 +33,14 @@
 webserv
 debugme
 
-# Local environment files
-.vscode
-*.pdf
+# Editors and IDEs 
+.vscode/
+*.swp
+tags
+
+# 42 Intelectual Property
+*subject*
+
+# Uploaded files
+www/uploads/*
+

@@ -634,27 +634,22 @@ HttpResponse	HttpRequest::handleGet(const LocationConfig& location,
 	return response;
 }
 
-/**
- * Handle POST request for file uploads
- */
-HttpResponse	HttpRequest::handlePost(const LocationConfig& location, 
-	HttpResponse& response, const Config& config)
-{
+HttpResponse HttpRequest::handlePost(LocationConfig const &location, 
+	HttpResponse& response, Config const &config) {
 	std::cout << "DEBUG: Handling POST request for " << _path << std::endl;
 	
 	// Build the full file path to check for CGI
 	std::string fullPath = location.root + _path;
 	
 	// Check if this is a CGI request
-	if (CgiHandler::isCgiFile(fullPath, location))
-	{
-		std::cout << "DEBUG: Detected CGI file, delegating to CGI handler" << std::endl;
+	if (CgiHandler::isCgiFile(fullPath, location)) {
+		std::cout << "DEBUG: Detected CGI file, delegating to CGI handler" << 
+		std::endl;
 		return handleCgi(location, response, config);
 	}
 	
 	// Check if upload is allowed for this location
-	if (location.uploadStore.empty())
-	{
+	if (location.uploadStore.empty()) {
 		std::cout << "DEBUG: Upload not allowed for this location" << std::endl;
 		response.setStatus(403);
 		response.setBody(config.getDefaultErrorPage(403));
@@ -664,16 +659,14 @@ HttpResponse	HttpRequest::handlePost(const LocationConfig& location,
 	// Parse Content-Type header to handle multipart/form-data
 	std::string contentType = getHeader("Content-Type");
 	
-	if (contentType.find("multipart/form-data") != std::string::npos)
-	{
+	if (contentType.find("multipart/form-data") != std::string::npos) {
 		return handleFileUpload(location, response, config);
 	}
-	else if (contentType.find("application/x-www-form-urlencoded") != std::string::npos)
-	{
-		return handleFormData(location, response, config);
+	else if (contentType.find("application/x-www-form-urlencoded") !=
+	std::string::npos) {
+		return handleFormData(response);
 	}
-	else
-	{
+	else {
 		// Simple file upload - treat body as raw file content
 		std::ostringstream oss;
 		oss << "upload_" << time(NULL);
@@ -681,9 +674,9 @@ HttpResponse	HttpRequest::handlePost(const LocationConfig& location,
 		std::string uploadPath = location.uploadStore + "/" + filename;
 		
 		std::ofstream file(uploadPath.c_str(), std::ios::binary);
-		if (!file.is_open())
-		{
-			std::cout << "DEBUG: Failed to create upload file: " << uploadPath << std::endl;
+		if (!file.is_open()) {
+			std::cout << "DEBUG: Failed to create upload file: " << 
+			uploadPath << std::endl;
 			response.setStatus(500);
 			response.setBody(config.getDefaultErrorPage(500));
 			return response;
@@ -979,20 +972,11 @@ HttpResponse	HttpRequest::handleFileUpload(const LocationConfig& location,
 	return response;
 }
 
-/**
- * Handle application/x-www-form-urlencoded data
- */
-HttpResponse	HttpRequest::handleFormData(const LocationConfig& location, 
-	HttpResponse& response, const Config& config)
-{
-	(void)location; // Unused parameter
-	(void)config;   // Unused parameter
-	
+HttpResponse HttpRequest::handleFormData(HttpResponse &response) {
 	std::cout << "DEBUG: Handling form data" << std::endl;
 	
 	response.setStatus(200);
 	response.setBody("<html><body><h1>Form Data Received</h1>"
-	                "<p>Form processing not yet implemented.</p>"
 	                "<p>Received " + _body + "</p>"
 	                "</body></html>");
 	response.addHeader("Content-Type", "text/html");
