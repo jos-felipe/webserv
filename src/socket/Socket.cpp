@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 14:40:18 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/02 15:06:04 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/07/10 01:52:15 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,23 +30,17 @@ Socket::SocketImpl::SocketImpl(void) : _fd(-1), _host(""), _port(0),
 	memset(&_addr, 0, sizeof(_addr));
 }
 
-/**
- * Constructor with host and port
- */
-Socket::SocketImpl::SocketImpl(const std::string& host, int port) : 
-	_host(host), _port(port), _bound(false), _listening(false), _refCount(1)
-{
+Socket::SocketImpl::SocketImpl(std::string const &host, int port) : 
+	_host(host), _port(port), _bound(false), _listening(false), _refCount(1) {
 	memset(&_addr, 0, sizeof(_addr));
 	
-	// Create the socket
 	_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (_fd < 0)
 		throw std::runtime_error("Failed to create socket");
 		
-	// Set address reuse
+	// Avoid "Address already in use" due TIME_WAIT
 	int opt = 1;
-	if (setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
-	{
+	if (setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
 		close();
 		throw std::runtime_error("Failed to set socket options");
 	}
@@ -64,11 +58,7 @@ Socket::SocketImpl::SocketImpl(int fd, const struct sockaddr_in& addr) :
 	_port = ntohs(addr.sin_port);
 }
 
-/**
- * Destructor
- */
-Socket::SocketImpl::~SocketImpl(void)
-{
+Socket::SocketImpl::~SocketImpl(void) {
 	close();
 }
 
@@ -155,11 +145,7 @@ int Socket::SocketImpl::accept(struct sockaddr_in& clientAddr)
     return clientFd;
 }
 
-/**
- * Set the socket to non-blocking mode
- */
-void	Socket::SocketImpl::setNonBlocking(void)
-{
+void	Socket::SocketImpl::setNonBlocking(void) {
 	int flags = fcntl(_fd, F_GETFL, 0);
 	
 	if (flags < 0)
@@ -187,13 +173,8 @@ ssize_t		Socket::SocketImpl::recv(void* buffer, size_t length)
 	return ::recv(_fd, buffer, length, 0);
 }
 
-/**
- * Close the socket
- */
-void	Socket::SocketImpl::close(void)
-{
-	if (_fd >= 0)
-	{
+void Socket::SocketImpl::close(void) {
+	if (_fd >= 0) {
 		::close(_fd);
 		_fd = -1;
 		_bound = false;

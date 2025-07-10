@@ -6,38 +6,22 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 14:30:22 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/02 14:47:21 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/07/09 23:10:30 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SOCKET_HPP
 # define SOCKET_HPP
 
-# include <string>
-# include <sys/types.h>
 # include <sys/socket.h>
 # include <netinet/in.h>
 # include <arpa/inet.h>
+# include <sys/types.h>
+# include <string>
 
-/**
- * @class Socket
- * @brief Wrapper for socket operations with safe copying semantics
- * 
- * This class encapsulates socket functionality using reference counting
- * to safely manage the underlying file descriptor when copied.
- */
-class Socket
-{
+class Socket {
 private:
-	/**
-	 * @class SocketImpl
-	 * @brief Private implementation with reference counting
-	 * 
-	 * This internal class manages the actual socket resources and
-	 * implements reference counting to track when the socket can be closed.
-	 */
-	class SocketImpl
-	{
+	class SocketImpl {
 	private:
 		int					_fd;
 		std::string			_host;
@@ -45,27 +29,12 @@ private:
 		struct sockaddr_in	_addr;
 		bool				_bound;
 		bool				_listening;
-		int					_refCount;  // Reference counter
+		int					_refCount;
 		
 	public:
-		/**
-		 * Default constructor
-		 */
 		SocketImpl(void);
-		
-		/**
-		 * Constructor with host and port
-		 */
-		SocketImpl(const std::string& host, int port);
-		
-		/**
-		 * Constructor with existing socket file descriptor
-		 */
-		SocketImpl(int fd, const struct sockaddr_in& addr);
-		
-		/**
-		 * Destructor
-		 */
+		SocketImpl(std::string const &host, int port);
+		SocketImpl(int fd, struct sockaddr_in const &addr);
 		~SocketImpl(void);
 		
 		/**
@@ -137,9 +106,6 @@ private:
 	SocketImpl*			_impl;  // Pointer to implementation
 	
 public:
-	/**
-	 * Default constructor
-	 */
 	Socket(void);
 	
 	/**

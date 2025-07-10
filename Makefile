@@ -6,7 +6,7 @@
 #    By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/03/24 12:00:00 by josfelip          #+#    #+#              #
-#    Updated: 2025/03/26 11:44:35 by josfelip         ###   ########.fr        #
+#    Updated: 2025/07/09 21:55:27 by josfelip         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -84,6 +84,7 @@ debug:
 	@make WITH_DEBUG=TRUE --no-print-directory
 
 run: all
+	ctags -R .
 	./$(NAME)
 
 # Include dependency files
