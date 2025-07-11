@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:50:42 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/02 20:42:57 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/07/11 19:44:16 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,10 @@ HttpRequest::HttpRequest(void) : _state(REQUEST_LINE), _contentLength(0),
 {
 }
 
+HttpRequest::HttpRequest(Logger& logger) :_logger(&logger)
+{
+}
+
 /**
  * Copy constructor
  */
@@ -47,7 +51,8 @@ HttpRequest::HttpRequest(const HttpRequest& other) :
 	_buffer(other._buffer),
 	_contentLength(other._contentLength),
 	_chunkSize(other._chunkSize),
-	_chunked(other._chunked)
+	_chunked(other._chunked),
+	_logger(other._logger)
 {
 }
 
@@ -92,17 +97,24 @@ bool	HttpRequest::read(Socket& clientSocket)
 	
 	ssize_t bytesRead = clientSocket.recv(buffer, BUFFER_SIZE);
 	
-	std::cout << "DEBUG: HttpRequest::read() received " << bytesRead 
+	std::ostringstream oss1;
+	oss1 << "DEBUG: HttpRequest::read() received " << bytesRead 
 	    << " bytes" << std::endl;
+	_logger->debug(oss1.str());
 	
 	if (bytesRead <= 0)
 	{
-	    if (bytesRead == 0)
-	        std::cout << "DEBUG: Client closed connection" << std::endl;
+	    if (bytesRead == 0){
+			std::ostringstream oss2;
+	        oss2 << "DEBUG: Client closed connection" << std::endl;
+			_logger->debug(oss2.str());
+			}
 	    else
 		{
-			std::cout << "DEBUG: Error reading from socket: "  
-			<< strerror(errno) << std::endl;			
+			std::ostringstream oss3;
+			oss3 << "DEBUG: Error reading from socket: "
+			<< strerror(errno) << std::endl;
+			_logger->error(oss3.str());
 		}
 		return false;
 	}
@@ -112,19 +124,26 @@ bool	HttpRequest::read(Socket& clientSocket)
 	
 	// Print first line of the buffer for debugging
 	size_t firstLineEnd = _buffer.find("\r\n");
-	if (firstLineEnd != std::string::npos)
-	    std::cout << "DEBUG: First line of request: " 
-	        << _buffer.substr(0, firstLineEnd) << std::endl;
-	else
-	    std::cout << "DEBUG: Request buffer (incomplete): " 
-	        << _buffer << std::endl;
-	
+	if (firstLineEnd != std::string::npos){
+		std::ostringstream oss4;
+		oss4 << "DEBUG: First line of request: " 
+			<< _buffer.substr(0, firstLineEnd) << std::endl;
+		_logger->debug(oss4.str());
+		}
+	else{
+		std::ostringstream oss5;
+		oss5 << "DEBUG: Request buffer (incomplete): " 
+		<< _buffer << std::endl;
+		_logger->debug(oss5.str());
+		}
 	// Process the buffer based on current state
 	bool done = false;
 	
 	while (!done)
 	{
-	    std::cout << "DEBUG: Request parse state: " << _state << std::endl;
+	    std::ostringstream oss1;
+		std::cout << "DEBUG: Request parse state: " << _state << std::endl;
+		_logger->debug(oss1.str());
 		switch (_state)
 		{
 			case REQUEST_LINE:
@@ -148,7 +167,10 @@ bool	HttpRequest::read(Socket& clientSocket)
 				{
 					_buffer = _buffer.substr(2);
 					_state = COMPLETE;
-					std::cout << "DEBUG: Request is COMPLETE after chunked end" << std::endl;
+					std::ostringstream oss6;
+					oss6 << "DEBUG: Request is COMPLETE after chunked end" << std::endl;
+					_logger->debug(oss6.str());
+					
 				}
 				else
 				{
@@ -156,19 +178,30 @@ bool	HttpRequest::read(Socket& clientSocket)
 				}
 				break;
 			case COMPLETE:
-			    std::cout << "DEBUG: Request is COMPLETE" << std::endl;
+			{
+			    std::ostringstream oss6;
+				oss6 << "DEBUG: Request is COMPLETE" << std::endl;
+				_logger->debug(oss6.str());
 				return true;
+			}
 			case ERROR:
-			    std::cout << "DEBUG: Request has ERROR state" << std::endl;
+			{
+				std::ostringstream oss7;
+			    oss7 << "DEBUG: Request has ERROR state" << std::endl;
+				_logger->debug(oss7.str());
 				return true;
+				
+			}
 			default:
 				done = true;
 		}
 	}
 	
 	bool isComplete = (_state == COMPLETE || _state == ERROR);
-	std::cout << "DEBUG: Returning from read(), request is " 
+	std::ostringstream oss8;
+	oss8 << "DEBUG: Returning from read(), request is " 
 	    << (isComplete ? "COMPLETE" : "INCOMPLETE") << std::endl;
+	_logger->debug(oss8.str());
 	
 	return isComplete;
 }
@@ -182,25 +215,33 @@ bool	HttpRequest::parseRequestLine(void)
 	
 	if (endPos == std::string::npos)
 	{
-	    std::cout << "DEBUG: Request line incomplete, waiting for more data" << std::endl;
+	    std::ostringstream oss9;
+		std::cout << "DEBUG: Request line incomplete, waiting for more data" << std::endl;
+		_logger->debug(oss9.str());
 		return false;
 	}
 		
 	std::string line = _buffer.substr(0, endPos);
 	_buffer = _buffer.substr(endPos + 2);
 	
-	std::cout << "DEBUG: Parsing request line: " << line << std::endl;
+	std::ostringstream oss10;
+	oss10 << "DEBUG: Parsing request line: " << line << std::endl;
+	_logger->debug(oss10.str());
 	
 	std::istringstream lineStream(line);
 	if (!(lineStream >> _method >> _uri >> _httpVersion))
 	{
-	    std::cout << "DEBUG: Failed to parse request line" << std::endl;
+	    std::ostringstream oss11;
+		oss11 << "DEBUG: Failed to parse request line" << std::endl;
 		_state = ERROR;
+		_logger->debug(oss11.str());
 		return false;
 	}
 	
-	std::cout << "DEBUG: Method=" << _method << ", URI=" << _uri 
+	std::ostringstream oss12;
+	oss12 << "DEBUG: Method=" << _method << ", URI=" << _uri 
 	    << ", Version=" << _httpVersion << std::endl;
+	_logger->debug(oss12.str());
 	
 	// Parse the URI into path and query
 	size_t queryPos = _uri.find('?');
@@ -213,8 +254,9 @@ bool	HttpRequest::parseRequestLine(void)
 	{
 		_path = _uri;
 	}
-	
-	std::cout << "DEBUG: Path=" << _path << ", Query=" << _query << std::endl;
+	std::ostringstream oss13;
+	oss13 << "DEBUG: Path=" << _path << ", Query=" << _query << std::endl;
+	_logger->debug(oss13.str());
 	
 	_state = HEADERS;
 	return true;
@@ -231,7 +273,9 @@ bool	HttpRequest::parseHeaders(void)
 		
 		if (endPos == std::string::npos)
 		{
-		    std::cout << "DEBUG: Headers incomplete, waiting for more data" << std::endl;
+		    std::ostringstream oss14;
+			oss14 << "DEBUG: Headers incomplete, waiting for more data" << std::endl;
+			_logger->debug(oss14.str());
 			return false;
 		}
 			
@@ -240,7 +284,9 @@ bool	HttpRequest::parseHeaders(void)
 		{
 			_buffer = _buffer.substr(2);
 			
-			std::cout << "DEBUG: End of headers found" << std::endl;
+			std::ostringstream oss15;
+			oss15 << "DEBUG: End of headers found" << std::endl;
+			_logger->debug(oss15.str());
 			
 			// Determine the next state based on headers
 			std::string transferEncoding = getHeader("Transfer-Encoding");
@@ -249,7 +295,9 @@ bool	HttpRequest::parseHeaders(void)
 				
 			if (transferEncoding.find("chunked") != std::string::npos)
 			{
-			    std::cout << "DEBUG: Found chunked encoding" << std::endl;
+			    std::ostringstream oss16;
+				oss16 << "DEBUG: Found chunked encoding" << std::endl;
+				_logger->debug(oss16.str());
 				_chunked = true;
 				_state = CHUNKED_SIZE;
 			}
@@ -259,7 +307,9 @@ bool	HttpRequest::parseHeaders(void)
 				if (!contentLengthStr.empty())
 				{
 					_contentLength = strtoul(contentLengthStr.c_str(), NULL, 10);
-					std::cout << "DEBUG: Content-Length: " << _contentLength << std::endl;
+					std::ostringstream oss17;
+					oss17 << "DEBUG: Content-Length: " << _contentLength << std::endl;
+					_logger->debug(oss17.str());
 					_state = BODY;
 				}
 				else

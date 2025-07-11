@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:35:21 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/01 10:35:11 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/07/11 19:12:30 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,12 +54,12 @@ private:
 	std::string							_query;
 	std::map<std::string, std::string>	_headers;
 	std::string							_body;
-	
 	ParseState							_state;
 	std::string							_buffer;
 	size_t								_contentLength;
 	size_t								_chunkSize;
 	bool								_chunked;
+	Logger*								_logger;
 	
 	/**
 	 * Parse the request line (GET /path HTTP/1.1)
@@ -149,6 +149,11 @@ public:
 	 * Default constructor
 	 */
 	HttpRequest(void);
+
+	/**
+	 * Constructor with Logger
+	 */
+	HttpRequest(Logger& logger);
 	
 	/**
 	 * Copy constructor
