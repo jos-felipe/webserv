@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:50:42 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/11 19:44:16 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/11 20:56:32 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -257,7 +257,6 @@ bool	HttpRequest::parseRequestLine(void)
 	std::ostringstream oss13;
 	oss13 << "DEBUG: Path=" << _path << ", Query=" << _query << std::endl;
 	_logger->debug(oss13.str());
-	
 	_state = HEADERS;
 	return true;
 }
