@@ -235,3 +235,11 @@ a {
 a:hover {
   text-decoration: underline;
 }
+
+/* === Página: successupload.html === */
+.done-image {
+  display: block;
+  margin: 0 auto 20px auto;
+  max-width: 40%;
+  height: auto;
+}
