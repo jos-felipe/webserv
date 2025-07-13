@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:45:21 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/05 17:20:56 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/13 15:46:21 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,7 +82,7 @@ public:
 	Server(void);
 	
 	/**
-	 * Constructor with configuration
+	 * Constructor with configuration and logger
 	 */
 	Server(const Config& config, Logger& logger);
 	

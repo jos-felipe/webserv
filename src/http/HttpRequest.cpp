@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:50:42 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/13 15:37:46 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/13 15:59:58 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -146,7 +146,7 @@ bool	HttpRequest::read(Socket& clientSocket)
 	while (!done)
 	{
 	    std::ostringstream oss1;
-		std::cout << "DEBUG: Request parse state: " << _state << std::endl;
+		oss1 << "DEBUG: Request parse state: " << _state << std::endl;
 		_logger->debug(oss1.str());
 		switch (_state)
 		{
@@ -452,14 +452,14 @@ bool	HttpRequest::parseChunkedData(void)
 		
 		
 		std::ostringstream oss2;
-		std::cout << "DEBUG: Chunk data complete, body now " 
+		oss2 << "DEBUG: Chunk data complete, body now " 
 		    << _body.size() << " bytes" << std::endl;
 		_logger->debug(oss2.str());
 		return true;
 	}
 	
 	std::ostringstream oss3;
-	std::cout << "DEBUG: Chunk data incomplete, waiting for more data" << std::endl;
+	oss3 << "DEBUG: Chunk data incomplete, waiting for more data" << std::endl;
 	_logger->debug(oss3.str());
 	return false;
 }
@@ -474,14 +474,14 @@ HttpResponse	HttpRequest::process(const Config& config)
 	<< _uri << " " << _httpVersion << std::endl;
 	_logger->debug(oss1.str());
     
-	HttpResponse response;
+	HttpResponse response(_logger);
 	
 	// Extract host and port from Host header
 	std::string host = getHeader("Host");
 	int port = 80;  // Default
 	
 	std::ostringstream oss2;
-	std::cout << "DEBUG: Host header: " << host << std::endl;
+	oss2<< "DEBUG: Host header: " << host << std::endl;
 	_logger->debug(oss2.str());
 	
 	size_t colonPos = host.find(':');
@@ -534,7 +534,7 @@ HttpResponse	HttpRequest::process(const Config& config)
 		location->allowedMethods.find(_method) == location->allowedMethods.end())
 	{
 		std::ostringstream oss8;
-		std::cout << "DEBUG: Method " << _method << " not allowed" << std::endl;
+		oss8 << "DEBUG: Method " << _method << " not allowed" << std::endl;
 		_logger->debug(oss8.str());
 		response.setStatus(405);
 		response.setBody(config.getDefaultErrorPage(405));
