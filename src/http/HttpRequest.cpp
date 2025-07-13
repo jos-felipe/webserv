@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:50:42 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/13 16:17:14 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/13 15:59:58 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -768,9 +768,9 @@ HttpResponse HttpRequest::handlePost(const LocationConfig& location,
 	{
 		return handleFileUpload(location, response, config);
 	}
-	else if (contentType.find("application/x-www-form-urlencoded") !=
-	std::string::npos) {
-		return handleFormData(response);
+	else if (contentType.find("application/x-www-form-urlencoded") != std::string::npos)
+	{
+		return handleFormData(location, response, config);
 	}
 	else
 	{
@@ -1120,6 +1120,7 @@ HttpResponse	HttpRequest::handleFormData(const LocationConfig& location,
 	
 	response.setStatus(200);
 	response.setBody("<html><body><h1>Form Data Received</h1>"
+	                "<p>Form processing not yet implemented.</p>"
 	                "<p>Received " + _body + "</p>"
 	                "</body></html>");
 	response.addHeader("Content-Type", "text/html");
@@ -1166,3 +1167,4 @@ HttpResponse HttpRequest::handleCgi(const LocationConfig& location,
 	CgiHandler cgiHandler;
 	return cgiHandler.handleCgiRequest(*this, location, scriptPath);
 }
+

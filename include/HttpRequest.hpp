@@ -97,8 +97,11 @@ private:
 	HttpResponse						handleGet(const LocationConfig& location, 
 												HttpResponse& response, const Config& config);
 	
-	HttpResponse handlePost(LocationConfig const &location, 
-		HttpResponse &response, Config const &config);
+	/**
+	 * Handle POST request for file uploads
+	 */
+	HttpResponse						handlePost(const LocationConfig& location, 
+												HttpResponse& response, const Config& config);
 	
 	/**
 	 * Handle DELETE request for file deletion
@@ -129,7 +132,11 @@ private:
 	HttpResponse						handleFileUpload(const LocationConfig& location, 
 													HttpResponse& response, const Config& config);
 	
-	HttpResponse handleFormData(HttpResponse &response); 
+	/**
+	 * Handle application/x-www-form-urlencoded data
+	 */
+	HttpResponse						handleFormData(const LocationConfig& location, 
+													HttpResponse& response, const Config& config);
 	
 	/**
 	 * Handle CGI request execution
