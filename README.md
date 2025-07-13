@@ -115,13 +115,13 @@ server {
 - [x] Project setup and repository initialization
 - [x] Configuration file parsing
 - [x] Socket management and non-blocking I/O
-- [x] HTTP request parsing
-- [x] HTTP response generation
-- [x] Static file serving
-- [x] Directory listing
-- [x] Error handling
-- [x] CGI implementation
-- [x] File upload handling
+- [ ] HTTP request parsing
+- [ ] HTTP response generation
+- [ ] Static file serving
+- [ ] Directory listing
+- [ ] Error handling
+- [ ] CGI implementation
+- [ ] File upload handling
 - [ ] Testing and documentation
 
 ## 🧪 Testing
@@ -134,9 +134,6 @@ The server can be tested using:
 
 ## 👥 Contributors
 - [jos-felipe](https://github.com/jos-felipe)
-- [Adedayo-Sanni](https://github.com/Adedayo-Sanni)
-- [Thiagosdcavalcante](https://github.com/Thiagosdcavalcante)
 
 ## 📄 License
 This project is part of the School 42 curriculum.
-
