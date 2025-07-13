@@ -6,7 +6,7 @@
 #    By: asanni <asanni@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/03/24 12:00:00 by josfelip          #+#    #+#              #
-#    Updated: 2025/07/12 17:10:09 by asanni           ###   ########.fr        #
+#    Updated: 2025/07/13 16:17:52 by asanni           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -82,6 +82,9 @@ re: fclean all
 
 debug:
 	@make WITH_DEBUG=TRUE --no-print-directory
+
+run: all
+	./$(NAME)
 
 # Include dependency files
 -include $(DEP)

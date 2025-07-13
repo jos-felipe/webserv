@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/13 15:39:11 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/13 16:17:44 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -217,6 +217,13 @@ void	Server::handleRequests(fd_set *readFdsReady)
                     _logger->debug(oss.str());
 					FD_CLR(clientFd, &_readFds);
 					FD_SET(clientFd, &_writeFds);
+				}
+				else
+				{
+					// Connection was closed or error occurred
+					std::cout << "DEBUG: Connection closed or error on fd " << clientFd 
+						<< ", marking for removal" << std::endl;
+					toRemove.push_back(clientFd);
 				}
 			}
 			catch (const std::exception& e)
