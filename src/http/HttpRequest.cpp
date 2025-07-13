@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:50:42 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/12 16:33:46 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/13 15:37:46 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,8 @@ HttpRequest::HttpRequest(void) : _state(REQUEST_LINE), _contentLength(0),
 /**
  * Constructor initializes logger class
  */
-HttpRequest::HttpRequest(Logger& logger) :_logger(&logger)
+HttpRequest::HttpRequest(Logger& logger) :_state(REQUEST_LINE), _contentLength(0), 
+	_chunkSize(0), _chunked(false), _logger(&logger)
 {
 }
 

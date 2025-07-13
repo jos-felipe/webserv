@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/12 17:24:23 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/13 15:39:11 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -188,7 +188,7 @@ void	Server::handleRequests(fd_set *readFdsReady)
                     oss << "DEBUG: Creating new request for fd " 
                     << clientFd << std::endl;
                     _logger->debug(oss.str());
-					_requests[clientFd] = HttpRequest();
+					_requests[clientFd] = HttpRequest(*_logger);
 				}
 					
 				HttpRequest& request = _requests[clientFd];
