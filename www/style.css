@@ -243,3 +243,21 @@ a:hover {
   max-width: 40%;
   height: auto;
 }
+
+/* === Página: datareceived.html === */
+.data-image {
+  display: block;
+  margin: 0 auto 20px auto;
+  max-width: 40%;
+  height: auto;
+}
+
+.data-text
+{
+  text-align: center;
+  color: #fff;
+  text-align: center;
+  margin-top: 20px;
+  font-size: 2rem;
+  text-weight: bold;
+}
