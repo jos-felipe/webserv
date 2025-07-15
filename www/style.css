@@ -1,11 +1,12 @@
 /* === Base (cores, fontes, layout geral) === */
 body {
   margin: 0;
-  padding: 40px 20px;
+  padding: 190px 20px 40px; /* Aumentei o padding-top */
   background-color: #000;
   color: #fff;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
+
 
 h1, h2 {
   text-align: center;
@@ -162,7 +163,8 @@ button:hover {
 }
 
 /* === Lista de links comuns === */
-ul {
+/* Seletor mais específico */
+ul:not(.nav-links) {
   max-width: 500px;
   margin: 20px auto;
   padding: 0;
@@ -170,6 +172,7 @@ ul {
   border-top: 1px solid #333;
   border-bottom: 1px solid #333;
 }
+
 
 ul li {
   padding: 10px;
@@ -231,4 +234,29 @@ a {
 
 a:hover {
   text-decoration: underline;
+}
+
+/* === Página: successupload.html === */
+.done-image {
+  display: block;
+  margin: 0 auto 20px auto;
+  max-width: 40%;
+  height: auto;
+}
+
+/* === Página: datareceived.html === */
+.data-image {
+  display: block;
+  margin: 0 auto 20px auto;
+  max-width: 40%;
+  height: auto;
+}
+
+.data-text
+{
+  text-align: center;
+  color: #fff;
+  text-align: center;
+  margin-top: 20px;
+  font-size: 2rem;
 }

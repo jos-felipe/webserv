@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CgiHandler.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/13 10:00:00 by josfelip          #+#    #+#             */
-/*   Updated: 2025/06/13 10:00:00 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/07/05 17:46:12 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,13 @@ CgiHandler::CgiHandler(void)
 }
 
 /**
+ * Constructor initializes server with Logger
+ */
+CgiHandler::CgiHandler(Logger& logger): _logger(&logger)
+{
+}
+
+/**
  * Copy constructor
  */
 CgiHandler::CgiHandler(const CgiHandler& other) :
@@ -42,7 +49,8 @@ CgiHandler::CgiHandler(const CgiHandler& other) :
 	_contentLength(other._contentLength),
 	_requestBody(other._requestBody),
 	_workingDirectory(other._workingDirectory),
-	_envVars(other._envVars)
+	_envVars(other._envVars),
+	_logger(other._logger)
 {
 }
 
@@ -96,7 +104,9 @@ bool	CgiHandler::isCgiFile(const std::string& path, const LocationConfig& locati
 HttpResponse	CgiHandler::handleCgiRequest(const HttpRequest& request,
 	const LocationConfig& location, const std::string& scriptPath)
 {
-	std::cout << "DEBUG: Handling CGI request for " << scriptPath << std::endl;
+	std::ostringstream oss1;
+	oss1 << "DEBUG: Handling CGI request for " << scriptPath << std::endl;
+	_logger->debug(oss1.str());
 	
 	HttpResponse response;
 	
@@ -104,7 +114,9 @@ HttpResponse	CgiHandler::handleCgiRequest(const HttpRequest& request,
 	struct stat statBuf;
 	if (stat(scriptPath.c_str(), &statBuf) != 0)
 	{
-		std::cout << "DEBUG: CGI script not found: " << scriptPath << std::endl;
+		std::ostringstream oss2;
+		oss2 << "DEBUG: CGI script not found: " << scriptPath << std::endl;
+		_logger->debug(oss2.str());
 		response.setStatus(404);
 		response.setBody("CGI script not found");
 		return response;
@@ -112,7 +124,9 @@ HttpResponse	CgiHandler::handleCgiRequest(const HttpRequest& request,
 	
 	if (!(statBuf.st_mode & S_IXUSR))
 	{
-		std::cout << "DEBUG: CGI script not executable: " << scriptPath << std::endl;
+		std::ostringstream oss3;
+		oss3 << "DEBUG: CGI script not executable: " << scriptPath << std::endl;
+		_logger->debug(oss3.str());
 		response.setStatus(403);
 		response.setBody("CGI script not executable");
 		return response;
@@ -159,7 +173,9 @@ HttpResponse	CgiHandler::handleCgiRequest(const HttpRequest& request,
 	
 	if (cgiOutput.empty())
 	{
-		std::cout << "DEBUG: CGI execution failed" << std::endl;
+		std::ostringstream oss4;
+		oss4 << "DEBUG: CGI execution failed" << std::endl;
+		_logger->debug(oss4.str());
 		response.setStatus(500);
 		response.setBody("Internal Server Error: CGI execution failed");
 		return response;
@@ -225,7 +241,9 @@ void	CgiHandler::setupEnvironment(const HttpRequest& request, const LocationConf
 		_envVars[envName] = it->second;
 	}
 	
-	std::cout << "DEBUG: CGI environment variables set up:" << std::endl;
+	std::ostringstream oss1;
+	oss1 << "DEBUG: CGI environment variables set up:" << std::endl;
+	_logger->debug(oss1.str());
 	for (std::map<std::string, std::string>::const_iterator it = _envVars.begin();
 		 it != _envVars.end(); ++it)
 	{
@@ -244,7 +262,9 @@ std::string	CgiHandler::executeCgi(void)
 	// Create pipes for communication with CGI process
 	if (pipe(inputPipe) == -1 || pipe(outputPipe) == -1)
 	{
-		std::cerr << "DEBUG: Failed to create pipes: " << strerror(errno) << std::endl;
+		std::ostringstream oss1;
+		oss1 << "DEBUG: Failed to create pipes: " << strerror(errno) << std::endl;
+		_logger->error(oss1.str());
 		return "";
 	}
 	
@@ -252,7 +272,9 @@ std::string	CgiHandler::executeCgi(void)
 	
 	if (pid == -1)
 	{
-		std::cerr << "DEBUG: Fork failed: " << strerror(errno) << std::endl;
+		std::ostringstream oss2;
+		oss2 << "DEBUG: Fork failed: " << strerror(errno) << std::endl;
+		_logger->error(oss2.str());
 		close(inputPipe[0]);
 		close(inputPipe[1]);
 		close(outputPipe[0]);
@@ -272,7 +294,9 @@ std::string	CgiHandler::executeCgi(void)
 		if (dup2(inputPipe[0], STDIN_FILENO) == -1 ||
 			dup2(outputPipe[1], STDOUT_FILENO) == -1)
 		{
-			std::cerr << "DEBUG: dup2 failed: " << strerror(errno) << std::endl;
+			std::ostringstream oss3;
+			oss3 << "DEBUG: dup2 failed: " << strerror(errno) << std::endl;
+			_logger->error(oss3.str());
 			exit(1);
 		}
 		
@@ -283,7 +307,9 @@ std::string	CgiHandler::executeCgi(void)
 		// Change working directory
 		if (chdir(_workingDirectory.c_str()) == -1)
 		{
-			std::cerr << "DEBUG: chdir failed: " << strerror(errno) << std::endl;
+			std::ostringstream oss4;
+			oss4 << "DEBUG: chdir failed: " << strerror(errno) << std::endl;
+			_logger->error(oss4.str());
 			exit(1);
 		}
 		
@@ -319,7 +345,9 @@ std::string	CgiHandler::executeCgi(void)
 		}
 		
 		// If we reach here, execve failed
-		std::cerr << "DEBUG: execve failed: " << strerror(errno) << std::endl;
+		std::ostringstream oss5;
+		oss5 << "DEBUG: execve failed: " << strerror(errno) << std::endl;
+		_logger->error(oss5.str());
 		freeEnvArray(envArray);
 		exit(1);
 	}
@@ -337,7 +365,9 @@ std::string	CgiHandler::executeCgi(void)
 			ssize_t bytesWritten = write(inputPipe[1], _requestBody.c_str(), _requestBody.length());
 			if (bytesWritten == -1)
 			{
-				std::cerr << "DEBUG: Failed to write to CGI stdin: " << strerror(errno) << std::endl;
+				std::ostringstream oss5;
+				oss5 << "DEBUG: Failed to write to CGI stdin: " << strerror(errno) << std::endl;
+				_logger->error(oss5.str());
 			}
 		}
 		close(inputPipe[1]); // Signal EOF to CGI
@@ -360,11 +390,13 @@ std::string	CgiHandler::executeCgi(void)
 		
 		if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
 		{
-			std::cerr << "DEBUG: CGI script exited with status " << WEXITSTATUS(status) << std::endl;
+			std::ostringstream oss6;
+			oss6 << "DEBUG: CGI script exited with status " << WEXITSTATUS(status) << std::endl;
+			_logger->debug(oss6.str());
 		}
-		
-		std::cout << "DEBUG: CGI output (" << output.length() << " bytes):" << std::endl;
-		std::cout << output << std::endl;
+		std::ostringstream oss7;
+		oss7 << "DEBUG: CGI output (" << output.length() << " bytes):" << output << std::endl;
+		_logger->debug(oss7.str());
 		
 		return output;
 	}
@@ -440,8 +472,9 @@ void	CgiHandler::parseCgiOutput(const std::string& output, HttpResponse& respons
 		{
 			response.addHeader(headerName, headerValue);
 		}
-		
-		std::cout << "DEBUG: CGI header: " << headerName << ": " << headerValue << std::endl;
+		std::ostringstream oss;
+		oss << "DEBUG: CGI header: " << headerName << ": " << headerValue << std::endl;
+		_logger->debug(oss.str());
 	}
 	
 	// Set default status if not set by CGI

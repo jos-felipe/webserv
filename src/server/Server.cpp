@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/06/10 12:46:24 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/07/13 15:39:11 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,8 @@
 #include <fcntl.h>
 #include <cerrno>
 #include <cstring>
+#include <sstream>
+#include "Logger.hpp"
 
 /**
  * Default constructor initializes an empty server
@@ -31,7 +33,7 @@ Server::Server(void) : _config(NULL), _maxFd(-1)
 /**
  * Constructor initializes server with provided configuration
  */
-Server::Server(const Config& config) : _config(&config), _maxFd(-1)
+Server::Server(const Config& config, Logger& logger) : _config(&config), _logger(&logger), _maxFd(-1)
 {
 	FD_ZERO(&_readFds);
 	FD_ZERO(&_writeFds);
@@ -92,14 +94,16 @@ void	Server::initializeSockets(void)
 			
 			if (fd > _maxFd)
 				_maxFd = fd;
-				
-			std::cout << "Server listening on " << it->host << ":" 
-				<< it->port << std::endl;
+			std::ostringstream oss;
+            oss << "Server listening on " << it->host << ":" << it->port;
+            _logger->info( oss.str());
 		}
 		catch (const std::exception& e)
-		{
-			std::cerr << "Failed to initialize socket on " << it->host 
+		{   
+            std::ostringstream oss;
+			oss << "Failed to initialize socket on " << it->host 
 				<< ":" << it->port << " - " << e.what() << std::endl;
+            _logger->error(oss.str());
 		}
 	}
 	
@@ -119,8 +123,10 @@ void Server::acceptConnections(fd_set *readFdsReady)
         
         if (FD_ISSET(listenFd, readFdsReady))
         {
-            std::cout << "DEBUG: Listen socket " << listenFd 
+            std::ostringstream oss;
+			oss << "DEBUG: Listen socket " << listenFd 
                 << " is ready for accepting" << std::endl;
+                _logger->error(oss.str());
                 
             try
             {
@@ -137,14 +143,17 @@ void Server::acceptConnections(fd_set *readFdsReady)
                     
                     if (clientFd > _maxFd)
                         _maxFd = clientFd;
-                        
-                    std::cout << "New connection accepted: fd " << clientFd << std::endl;
+                    std::ostringstream oss;
+                    oss << "New connection accepted: fd " << clientFd << std::endl;
+                    _logger->info(oss.str());    
                 }
             }
             catch (const std::exception& e)
             {
-                std::cerr << "Failed to accept connection: " 
+                std::ostringstream oss;
+                oss << "Failed to accept connection: " 
                     << e.what() << std::endl;
+                _logger->error(oss.str());
             }
         }
     }
@@ -167,50 +176,55 @@ void	Server::handleRequests(fd_set *readFdsReady)
 		
 		if (FD_ISSET(clientFd, readFdsReady))
 		{
-		    std::cout << "DEBUG: Client socket " << clientFd 
-                << " is ready for reading" << std::endl;
-                
+            std::ostringstream oss;
+		    oss << "DEBUG: Client socket " << clientFd 
+            << " is ready for reading" << std::endl;
+            _logger->debug(oss.str());
 			try
 			{
 				if (!_requests.count(clientFd))
 				{
-				    std::cout << "DEBUG: Creating new request for fd " 
-                        << clientFd << std::endl;
-					_requests[clientFd] = HttpRequest();
+                    std::ostringstream oss;
+                    oss << "DEBUG: Creating new request for fd " 
+                    << clientFd << std::endl;
+                    _logger->debug(oss.str());
+					_requests[clientFd] = HttpRequest(*_logger);
 				}
 					
 				HttpRequest& request = _requests[clientFd];
 				
 				bool requestComplete = request.read(it->second);
-				std::cout << "DEBUG: Request read returned: " 
+                    std::ostringstream oss;
+                    oss << "DEBUG: Request read returned: " 
                     << (requestComplete ? "COMPLETE" : "INCOMPLETE") << std::endl;
+                    _logger->debug(oss.str());
 				
 				if (requestComplete)
 				{
 					// Request is complete, process it
-					std::cout << "DEBUG: Processing request and generating response" 
-                        << std::endl;
+
+                    std::ostringstream oss1;
+                    oss1 << "DEBUG: Processing request and generating response" 
+                    << std::endl;
+                    _logger->debug(oss.str());
 					HttpResponse response = request.process(*_config);
 					_responses[clientFd] = response;
 					
 					// Switch to writing mode
-					std::cout << "DEBUG: Switching socket " << clientFd 
-                        << " to write mode" << std::endl;
+                    std::ostringstream oss2;
+					oss2 << "DEBUG: Switching socket " << clientFd 
+                    << " to write mode" << std::endl;
+                    _logger->debug(oss.str());
 					FD_CLR(clientFd, &_readFds);
 					FD_SET(clientFd, &_writeFds);
-				}
-				else
-				{
-					// Connection was closed or error occurred
-					std::cout << "DEBUG: Connection closed or error on fd " << clientFd 
-						<< ", marking for removal" << std::endl;
-					toRemove.push_back(clientFd);
 				}
 			}
 			catch (const std::exception& e)
 			{
-				std::cerr << "Error handling request on fd " << clientFd 
-					<< ": " << e.what() << std::endl;
+                std::ostringstream oss;
+				oss << "Error handling request on fd " << clientFd 
+                << ": " << e.what() << std::endl;
+                _logger->error(oss.str());
 				toRemove.push_back(clientFd);
 			}
 		}
@@ -235,7 +249,9 @@ void	Server::handleRequests(fd_set *readFdsReady)
  */
 void Server::sendResponses(fd_set *writeFdsReady)
 {
-    std::cout << "DEBUG: Checking for sockets ready to write" << std::endl;
+    std::ostringstream oss;
+    oss << "DEBUG: Checking for sockets ready to write" << std::endl;
+    _logger->debug(oss.str());
     
     std::vector<int> toRemove;
     std::vector<int> toKeepAlive;  // New vector to track connections to keep alive
@@ -247,14 +263,18 @@ void Server::sendResponses(fd_set *writeFdsReady)
         
         // Validate file descriptor before using it
         if (clientFd < 0 || clientFd >= FD_SETSIZE) {
-            std::cerr << "Error: Invalid file descriptor " << clientFd << std::endl;
+            std::ostringstream oss;
+            oss << "Error: Invalid file descriptor " << clientFd << std::endl;
+            _logger->error(oss.str());
             toRemove.push_back(clientFd);
             continue;
         }
         
-        std::cout << "DEBUG: Checking if socket " << clientFd 
-            << " is ready for writing: " 
-            << (FD_ISSET(clientFd, writeFdsReady) ? "YES" : "NO") << std::endl;
+        std::ostringstream oss;
+        oss << "DEBUG: Checking if socket " << clientFd 
+        << " is ready for writing: " 
+        << (FD_ISSET(clientFd, writeFdsReady) ? "YES" : "NO") << std::endl;
+        _logger->debug(oss.str());
             
         if (FD_ISSET(clientFd, writeFdsReady))
         {
@@ -264,38 +284,49 @@ void Server::sendResponses(fd_set *writeFdsReady)
                 
                 // Check if client socket exists before accessing it
                 if (_clientSockets.find(clientFd) == _clientSockets.end()) {
-                    std::cerr << "Error: Client socket not found for fd " 
-                        << clientFd << std::endl;
+                    std::ostringstream oss;
+                    oss << "Error: Client socket not found for fd " 
+                    << clientFd << std::endl;
+                    _logger->error(oss.str());
                     toRemove.push_back(clientFd);
                     continue;
                 }
-                
-                std::cout << "DEBUG: Attempting to send response on fd " 
-                    << clientFd << std::endl;
+                std::ostringstream oss;
+                oss << "DEBUG: Attempting to send response on fd " 
+                << clientFd << std::endl;
+                _logger->debug(oss.str());
                     
                 if (response.send(_clientSockets[clientFd]))
                 {
                     // Response fully sent, either keep-alive or close
-                    std::cout << "DEBUG: Response fully sent on fd " 
+                    std::ostringstream oss;
+                    oss << "DEBUG: Response fully sent on fd " 
                         << clientFd << std::endl;
+                    _logger->debug(oss.str());
                         
                     if (response.shouldKeepAlive())
                     {
                         // Mark for keep-alive processing AFTER we finish iterating
-                        std::cout << "DEBUG: Marking connection for keep-alive: " 
-                            << clientFd << std::endl;
+                        std::ostringstream oss;
+                        oss << "DEBUG: Marking connection for keep-alive: " 
+                        << clientFd << std::endl;
+                        _logger->debug(oss.str());
                         toKeepAlive.push_back(clientFd);
                     }
                     else
                     {
-                        std::cout << "DEBUG: Connection will be closed" << std::endl;
+                        std::ostringstream oss;
+                        oss << "DEBUG: Connection will be closed" << std::endl;
+                        _logger->debug(oss.str());
                         toRemove.push_back(clientFd);
                     }
                 }
                 else
                 {
-                    std::cout << "DEBUG: Response not fully sent yet, "
-                        << "will try again later" << std::endl;
+                    std::ostringstream oss;
+                    oss << "DEBUG: Response not fully sent yet, "
+                    << "will try again later" << std::endl;
+                    _logger->debug(oss.str());
                 }
             }
             catch (const std::exception& e)
@@ -312,8 +343,10 @@ void Server::sendResponses(fd_set *writeFdsReady)
          it != toKeepAlive.end(); ++it)
     {
         int clientFd = *it;
-        std::cout << "DEBUG: Keeping connection alive, "
-            << "switching " << clientFd << " back to read mode" << std::endl;
+        std::ostringstream oss;
+        oss << "DEBUG: Keeping connection alive, "
+        << "switching " << clientFd << " back to read mode" << std::endl;
+        _logger->debug(oss.str());
         
         // Reset for new request
         _requests.erase(clientFd);
@@ -327,7 +360,9 @@ void Server::sendResponses(fd_set *writeFdsReady)
         it != toRemove.end(); ++it)
     {
         int clientFd = *it;
-        std::cout << "DEBUG: Closing connection: " << clientFd << std::endl;
+        std::ostringstream oss1;
+        oss1 << "DEBUG: Closing connection: " << clientFd << std::endl;
+        _logger->debug(oss.str());
         
         FD_CLR(clientFd, &_readFds);
         FD_CLR(clientFd, &_writeFds);
@@ -335,7 +370,9 @@ void Server::sendResponses(fd_set *writeFdsReady)
         _requests.erase(clientFd);
         _responses.erase(clientFd);
         close(clientFd);
-        std::cout << "Connection closed: fd " << clientFd << std::endl;
+        std::ostringstream oss2;
+        oss2 << "Connection closed: fd " << clientFd << std::endl;
+        _logger->debug(oss.str());
     }
 }
 /**
@@ -344,7 +381,9 @@ void Server::sendResponses(fd_set *writeFdsReady)
 void	Server::start(void)
 {
 	initializeSockets();
-	std::cout << "Server started successfully" << std::endl;
+    std::ostringstream oss;
+	oss << "Server started successfully" << std::endl;
+    _logger->info(oss.str());
 }
 
 /**
@@ -366,21 +405,17 @@ void	Server::run(void)
     int actualFdCount = 0;
     for (int i = 0; i <= _maxFd; i++) {
         if (FD_ISSET(i, &_readFds) || FD_ISSET(i, &_writeFds)) {
-            std::cout << "DEBUG: Monitoring fd " << i;
-            if (FD_ISSET(i, &_readFds) && FD_ISSET(i, &_writeFds)) {
-                std::cout << " (read+write)";
-            } else if (FD_ISSET(i, &_readFds)) {
-                std::cout << " (read)";
-            } else {
-                std::cout << " (write)";
-            }
-            std::cout << std::endl;
+            std::ostringstream oss;
+            oss << "DEBUG: Monitoring fd " << i << std::endl;
+            _logger->debug(oss.str());
             actualFdCount++;
         }
     }
-    std::cout << "DEBUG: select() checking range 0-" << _maxFd 
-        << " (" << _maxFd + 1 << " total), actually monitoring " 
-        << actualFdCount << " file descriptors" << std::endl;
+    std::ostringstream oss;
+    oss << "DEBUG: select() checking range 0-" << _maxFd 
+    << " (" << _maxFd + 1 << " total), actually monitoring " 
+    << actualFdCount << " file descriptors" << std::endl;
+    _logger->debug(oss.str());
     
     int activity = select(_maxFd + 1, &readFdsCopy, &writeFdsCopy, 
         &errorFdsCopy, NULL);
@@ -388,7 +423,9 @@ void	Server::run(void)
     if (activity < 0)
     {
         if (errno != EINTR) // Ignore if interrupted by signal
-            std::cerr << "Select error: " << strerror(errno) << std::endl;
+        std::ostringstream oss;
+        oss << "Select error: " << strerror(errno) << std::endl;
+        _logger->error(oss.str());
         return;
     }
     else if (activity == 0) 
@@ -396,9 +433,10 @@ void	Server::run(void)
         // Timeout occurred, no activity
         return;
     }
-    
-    std::cout << "DEBUG: select() returned " << activity 
-        << " ready file descriptors" << std::endl;
+    std::ostringstream oss1;
+    oss1 << "DEBUG: select() returned " << activity 
+    << " ready file descriptors" << std::endl;
+    _logger->debug(oss.str());
       
     // Process I/O events
     acceptConnections(&readFdsCopy);
@@ -428,5 +466,7 @@ void	Server::stop(void)
 	_requests.clear();
 	_responses.clear();
 	
-	std::cout << "Server stopped" << std::endl;
+    std::ostringstream oss;
+	oss << "Server stopped" << std::endl;
+    _logger->info(oss.str());
 }

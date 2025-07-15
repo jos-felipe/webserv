@@ -3,14 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: asanni <asanni@student.42sp.org.br>        +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:20:34 by josfelip          #+#    #+#             */
-/*   Updated: 2025/06/17 17:44:00 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/05 16:36:36 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Config.hpp"
+#include "Logger.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -25,7 +26,7 @@ Config::Config(void) : _configPath("")
 /**
  * Constructor reads and parses the configuration file
  */
-Config::Config(const std::string& configPath) : _configPath(configPath)
+Config::Config(const std::string& configPath, Logger& logger) : _configPath(configPath), _logger(logger)
 {
 	parseConfig();
 	validateConfig();
@@ -321,20 +322,26 @@ const std::vector<ServerConfig>&	Config::getServers(void) const
 const ServerConfig* Config::findServer(const std::string& host, int port, 
 	const std::string& serverName) const
 {
-	std::cout << "DEBUG: Finding server for host='" << host 
+	std::ostringstream oss1;
+	oss1 << "DEBUG: Finding server for host='" << host 
 	<< "', port=" << port << ", name='" << serverName << "'" << std::endl;
+	_logger.debug(oss1.str());
 
 	const ServerConfig* defaultServer = NULL;
 
 	// Log all available servers for debugging
-	std::cout << "DEBUG: Total servers in config: " << _servers.size() << std::endl;
+	std::ostringstream oss2;
+	oss2 << "DEBUG: Total servers in config: " << _servers.size() << std::endl;
+	_logger.debug(oss2.str());
 
 	for (size_t i = 0; i < _servers.size(); i++)
 	{
 	const ServerConfig& server = _servers[i];
 
-	std::cout << "DEBUG: Checking server #" << i << ": host='" << server.host 
+	std::ostringstream oss3;
+	oss3 << "DEBUG: Checking server #" << i << ": host='" << server.host 
 	<< "', port=" << server.port;
+	_logger.debug(oss3.str());
 
 	if (!server.serverNames.empty()) {
 	std::cout << ", names=[";
@@ -352,13 +359,17 @@ const ServerConfig* Config::findServer(const std::string& host, int port,
 
 	if (hostMatches && portMatches)
 	{
-	std::cout << "DEBUG: Found matching host/port" << std::endl;
+		std::ostringstream oss4;
+		oss4 << "DEBUG: Found matching host/port" << std::endl;
+		_logger.debug(oss4.str());
 
 	// Check if server name matches
 	if (server.serverNames.empty())
 	{
-	std::cout << "DEBUG: Server has no server_names, using as default" 
-	<< std::endl;
+		std::ostringstream oss5;
+			oss5 << "DEBUG: Server has no server_names, using as default" 
+		<< std::endl;
+		_logger.debug(oss5.str());
 	if (!defaultServer)
 	defaultServer = &server;
 	}
@@ -366,32 +377,44 @@ const ServerConfig* Config::findServer(const std::string& host, int port,
 	{
 	for (size_t j = 0; j < server.serverNames.size(); j++)
 	{
-	std::cout << "DEBUG: Comparing server_name '" 
-	<< server.serverNames[j] << "' with '" 
-	<< serverName << "'" << std::endl;
+		std::ostringstream oss6;
+			oss6 << "DEBUG: Comparing server_name '" 
+		<< server.serverNames[j] << "' with '" 
+		<< serverName << "'" << std::endl;
+		_logger.debug(oss6.str());
 
 	if (server.serverNames[j] == serverName)
 	{
-	std::cout << "DEBUG: Server name matches!" << std::endl;
-	return &server;
+		std::ostringstream oss7;
+			oss7 << "DEBUG: Server name matches!" << std::endl;
+			_logger.debug(oss7.str());
+		return &server;
 	}
 	}
 
 	// No matching server name, but host/port match, so potential default
 	if (!defaultServer)
 	{
-	std::cout << "DEBUG: No matching server_name, " 
-	<< "but using as potential default" << std::endl;
-	defaultServer = &server;
+		std::ostringstream oss8;
+			oss8 << "DEBUG: No matching server_name, " 
+		<< "but using as potential default" << std::endl;
+		defaultServer = &server;
+		_logger.debug(oss8.str());
 	}
 	}
 	}
 	}
 
-	if (defaultServer)
-	std::cout << "DEBUG: Returning default server for this host/port" << std::endl;
-	else
-	std::cout << "DEBUG: No matching server found!" << std::endl;
+	if (defaultServer){
+		std::ostringstream oss9;
+		oss9 << "DEBUG: Returning default server for this host/port" << std::endl;
+		_logger.debug(oss9.str());
+	}
+	else{
+		std::ostringstream oss10;
+		oss10 << "DEBUG: No matching server found!" << std::endl;
+		_logger.debug(oss10.str());
+	}
 
 	return defaultServer;
 }
@@ -439,8 +462,10 @@ std::string Config::getDefaultErrorPage(int statusCode) const
             ss << file.rdbuf();
             return ss.str();
         }
-        std::cerr << "WARNING: não foi possível abrir página de erro '"
+		std::ostringstream oss;
+        oss << "WARNING: não foi possível abrir página de erro '"
                   << fullPath  << ")\n";
+		_logger.error(oss.str());
         
     }
     // se falhar, continua para a error page embutida
