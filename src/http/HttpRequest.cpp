@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42sp.org.br>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:50:42 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/13 20:59:41 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/15 18:21:24 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1093,9 +1093,9 @@ HttpResponse HttpRequest::handleFileUpload(const LocationConfig& location,
 	     << " bytes to " << uploadPath;
 	_logger->debug(oss3.str());
 
-	response.setStatus(303);  // See Other
+	response.setStatus(303);
 	response.addHeader("Location", "successupload.html");
-	response.setBody("");  // opcional
+	response.setBody("");
 
 return response;
 }
