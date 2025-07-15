@@ -13,9 +13,9 @@
 #include <iostream>
 #include <cstdlib>
 #include <csignal>
-#include "../include/Server.hpp"
-#include "../include/Config.hpp"
-#include "../include/Logger.hpp"
+#include "Logger.hpp"
+#include "Config.hpp"
+#include "Server.hpp"
 
 bool	g_running = true;
 
