@@ -3,7 +3,7 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: asanni <asanni@student.42.fr>              +#+  +:+       +#+         #
+#    By: asanni <asanni@student.42sp.org.br>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/03/24 12:00:00 by josfelip          #+#    #+#              #
 #    Updated: 2025/07/12 17:10:09 by asanni           ###   ########.fr        #
