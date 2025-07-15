@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42sp.org.br>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:29:42 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/12 17:26:35 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/15 19:25:41 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,8 +65,7 @@ int main(int argc, char **argv)
 		configPath = argv[1];
 
 	try {
-		Logger logger;                     // ✅ Logger local
-		logger.setLevel(LOG_INFO);        // ou LOG_DEBUG, dependendo do que quer ver
+		Logger logger;                     // Local Logger 
 
 		Config config(configPath, logger);
 		setupSignals();
@@ -86,7 +85,6 @@ int main(int argc, char **argv)
 	}
 	catch (const std::exception &e) {
 		Logger logger;                    // ✅ Logger local em caso de erro
-		logger.setLevel(LOG_ERROR);
 		logger.error(std::string("Error: ") + e.what());
 		return EXIT_FAILURE;
 	}

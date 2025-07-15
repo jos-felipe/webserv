@@ -3,17 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   Logger.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42sp.org.br>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/30 17:23:07 by asanni            #+#    #+#             */
-/*   Updated: 2025/07/12 16:00:53 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/15 19:32:40 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Logger.hpp"
 #include <iostream>
 
-Logger::Logger(void) : _level(LOG_INFO) {}
+Logger::Logger(void){}
 
 Logger::Logger(const Logger& other) : _level(other._level) {}
 
@@ -35,13 +35,19 @@ LogLevel Logger::getLevel(void) const {
 
 void Logger::log(LogLevel level, const std::string& message) const {
 	switch (level) {
-		case LOG_ERROR:
+		case CRITICAL:
 			std::cerr << "[ERROR] " << message << std::endl;
 			break;
-		case LOG_INFO:
+		case ERROR:
+			std::cerr << "[ERROR] " << message << std::endl;
+			break;
+		case WARNING:
 			std::cout << "[INFO] " << message << std::endl;
 			break;
-		case LOG_DEBUG:
+		case INFO:
+			std::cout << "[INFO] " << message << std::endl;
+			break;
+		case DEBUG:
 			std::cout << "[DEBUG] " << message << std::endl;
 			break;
 	}

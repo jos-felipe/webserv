@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42sp.org.br>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:45:21 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/13 15:46:21 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/15 19:12:20 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ class Server
 {
 private:
 	const Config*				_config;  // Changed to pointer to allow default constructor
-	Logger*						_logger; 
+	Logger*							_logger; 
 	std::vector<Socket>			_listenSockets;
 	std::map<int, Socket>		_clientSockets;
 	std::map<int, HttpRequest>	_requests;
@@ -43,7 +43,7 @@ private:
 	fd_set						_readFds;
 	fd_set						_writeFds;
 	fd_set						_errorFds;
-	int							_maxFd;
+	int								_maxFd;
 	
 	/**
 	 * Initialize listening sockets based on configuration

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Logger.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42sp.org.br>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/05 14:17:10 by asanni            #+#    #+#             */
-/*   Updated: 2025/07/05 14:17:14 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/15 19:27:03 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,10 +16,18 @@
 # include <iostream>
 # include <string>
 
+
+
+# ifndef LOG_LEVEL
+# define LOG_LEVEL INFO
+# endif
+
 enum LogLevel {
-	LOG_ERROR,
-	LOG_INFO,
-	LOG_DEBUG
+	DEBUG,
+	INFO,
+	WARNING,
+	ERROR,
+	CRITICAL
 };
 
 class Logger {
@@ -36,11 +44,13 @@ public:
 	LogLevel getLevel(void) const;
 
 	void log(LogLevel level, const std::string& message) const;
-std::ostringstream oss;
+
 	// Métodos convenientes por nível:
-	void error(const std::string& message) const;
-	void info(const std::string& message) const;
 	void debug(const std::string& message) const;
+	void info(const std::string& message) const;
+	void warning(const std::string& message) const;
+	void error(const std::string& message) const;
+	void critical(const std::string& message) const;
 };
 
 #endif
