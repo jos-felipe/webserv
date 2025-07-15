@@ -14,7 +14,7 @@ NAME = webserv
 
 # Compiler and flags
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -g
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 DEPFLAGS = -MMD -MP
 DBGFLAGS = -g3 -D LOG_LEVEL=LOG_DEBUG
 
