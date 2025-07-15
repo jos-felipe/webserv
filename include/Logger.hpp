@@ -36,7 +36,7 @@ public:
 	LogLevel getLevel(void) const;
 
 	void log(LogLevel level, const std::string& message) const;
-
+std::ostringstream oss;
 	// Métodos convenientes por nível:
 	void error(const std::string& message) const;
 	void info(const std::string& message) const;
