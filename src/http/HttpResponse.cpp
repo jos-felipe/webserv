@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 14:20:15 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/13 15:58:11 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/19 16:17:38 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 #include <cerrno>
 
 
-HttpResponse::HttpResponse(Logger* logger)
+HttpResponse::HttpResponse(Logger logger)
 	: _statusCode(200), _statusText("OK"), _bytesSent(0), _keepAlive(true), _logger(logger)
 {
 }
@@ -125,12 +125,11 @@ std::string	HttpResponse::getStatusText(int statusCode)
  */
 void	HttpResponse::generateRawResponse(void)
 {
-	if (_logger)
-	{
-		std::ostringstream oss;
-		oss << "DEBUG: Generating raw response for status " << _statusCode;
-		_logger->debug(oss.str());
-	}
+	
+		std::ostringstream oss1;
+		oss1 << "DEBUG: Generating raw response for status " << _statusCode;
+		_logger.debug(oss1.str());
+	
 
 	std::ostringstream oss;
 	oss << "HTTP/1.1 " << _statusCode << " " << _statusText << "\r\n";
@@ -157,12 +156,10 @@ void	HttpResponse::generateRawResponse(void)
 	for (std::map<std::string, std::string>::const_iterator it = _headers.begin();
 		it != _headers.end(); ++it)
 	{
-		if (_logger)
-		{
+
 			std::ostringstream ossHeader;
 			ossHeader << "DEBUG: Adding header: " << it->first << ": " << it->second;
-			_logger->debug(ossHeader.str());
-		}
+			_logger.debug(ossHeader.str());
 		oss << it->first << ": " << it->second << "\r\n";
 	}
 
@@ -170,27 +167,20 @@ void	HttpResponse::generateRawResponse(void)
 
 	if (!_body.empty())
 	{
-		if (_logger)
-		{
 			std::ostringstream ossBody;
 			ossBody << "DEBUG: Adding body of " << _body.length() << " bytes";
-			_logger->debug(ossBody.str());
-		}
+			_logger.debug(ossBody.str());
 		oss << _body;
 	}
-
 	_rawResponse = oss.str();
 
-	if (_logger)
-	{
 		std::string firstPart = _rawResponse.substr(0, std::min(_rawResponse.length(),
 			static_cast<size_t>(200)));
 		std::ostringstream ossDebug;
 		ossDebug << "DEBUG: Raw response (" << _rawResponse.length() << " bytes):\n" << firstPart;
 		if (_rawResponse.length() > 200)
 			ossDebug << "...";
-		_logger->debug(ossDebug.str());
-	}
+		_logger.debug(ossDebug.str());
 }
 
 std::string	HttpResponse::getFormattedDate(void)
@@ -208,44 +198,32 @@ void	HttpResponse::setStatus(int statusCode)
 	_statusCode = statusCode;
 	_statusText = getStatusText(statusCode);
 
-	if (_logger)
-	{
 		std::ostringstream oss;
 		oss << "DEBUG: Response status set to " << _statusCode << " " << _statusText;
-		_logger->debug(oss.str());
-	}
+		_logger.debug(oss.str());
 }
 
 void	HttpResponse::addHeader(const std::string& name, const std::string& value)
 {
-	if (_logger)
-	{
-		std::ostringstream oss;
-		oss << "DEBUG: Adding header: " << name << ": " << value;
-		_logger->debug(oss.str());
-	}
+	std::ostringstream oss;
+	oss << "DEBUG: Adding header: " << name << ": " << value;
+	_logger.debug(oss.str());
 	_headers[name] = value;
 }
 
 void	HttpResponse::setBody(const std::string& body)
 {
-	if (_logger)
-	{
 		std::ostringstream oss;
 		oss << "DEBUG: Setting body with " << body.length() << " bytes";
-		_logger->debug(oss.str());
-	}
+		_logger.debug(oss.str());
 	_body = body;
 }
 
 void	HttpResponse::setKeepAlive(bool keepAlive)
 {
-	if (_logger)
-	{
 		std::ostringstream oss;
 		oss << "DEBUG: Setting keepAlive to " << (keepAlive ? "true" : "false");
-		_logger->debug(oss.str());
-	}
+		_logger.debug(oss.str());
 	_keepAlive = keepAlive;
 }
 
@@ -258,8 +236,8 @@ bool	HttpResponse::send(Socket& clientSocket)
 {
 	if (_rawResponse.empty())
 	{
-		if (_logger)
-			_logger->debug("DEBUG: No raw response yet, generating now");
+
+		_logger.debug("DEBUG: No raw response yet, generating now");
 		generateRawResponse();
 	}
 
@@ -267,49 +245,40 @@ bool	HttpResponse::send(Socket& clientSocket)
 
 	if (remaining == 0)
 	{
-		if (_logger)
-			_logger->debug("DEBUG: No bytes remaining to send, response complete");
+		_logger.debug("DEBUG: No bytes remaining to send, response complete");
 		return true;
 	}
 
-	if (_logger)
-	{
-		std::ostringstream oss;
-		oss << "DEBUG: Sending " << remaining << " remaining bytes";
-		_logger->debug(oss.str());
-	}
+		std::ostringstream oss1;
+		oss1 << "DEBUG: Sending " << remaining << " remaining bytes";
+		_logger.debug(oss1.str());
 
 	ssize_t bytesSent = clientSocket.send(_rawResponse.c_str() + _bytesSent, remaining);
 
 	if (bytesSent < 0)
 	{
-		if (_logger)
-		{
-			std::ostringstream oss;
-			oss << "DEBUG: Send failed with error: " << strerror(errno);
-			_logger->debug(oss.str());
-		}
+		
+			std::ostringstream oss2;
+			oss2 << "DEBUG: Send failed with error: " << strerror(errno);
+			_logger.debug(oss2.str());
+		
 		throw std::runtime_error("Failed to send response: " + std::string(strerror(errno)));
 	}
 
-	if (_logger)
-	{
-		std::ostringstream oss;
-		oss << "DEBUG: Successfully sent " << bytesSent << " bytes";
-		_logger->debug(oss.str());
-	}
+
+		std::ostringstream oss3;
+		oss3 << "DEBUG: Successfully sent " << bytesSent << " bytes";
+		_logger.debug(oss3.str());
 
 	_bytesSent += bytesSent;
 
 	bool complete = (_bytesSent == _rawResponse.length());
 
-	if (_logger)
-	{
-		std::ostringstream oss;
-		oss << "DEBUG: Response sending is " << (complete ? "complete" : "incomplete")
+
+		std::ostringstream oss4;
+		oss4 << "DEBUG: Response sending is " << (complete ? "complete" : "incomplete")
 			<< " (" << _bytesSent << "/" << _rawResponse.length() << " bytes)";
-		_logger->debug(oss.str());
-	}
+		_logger.debug(oss4.str());
 
 	return complete;
 }

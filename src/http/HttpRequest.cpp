@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:50:42 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/13 15:59:58 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/19 16:03:31 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,8 +34,8 @@ HttpRequest::HttpRequest(void) : _state(REQUEST_LINE), _contentLength(0),
 /**
  * Constructor initializes logger class
  */
-HttpRequest::HttpRequest(Logger& logger) :_state(REQUEST_LINE), _contentLength(0), 
-	_chunkSize(0), _chunked(false), _logger(&logger)
+HttpRequest::HttpRequest(Logger logger) :_state(REQUEST_LINE), _contentLength(0), 
+	_chunkSize(0), _chunked(false), _logger(logger)
 {
 }
 
@@ -104,21 +104,21 @@ bool	HttpRequest::read(Socket& clientSocket)
 	std::ostringstream oss1;
 	oss1 << "DEBUG: HttpRequest::read() received " << bytesRead 
 	    << " bytes" << std::endl;
-	_logger->debug(oss1.str());
+	_logger.debug(oss1.str());
 	
 	if (bytesRead <= 0)
 	{
 	    if (bytesRead == 0){
 			std::ostringstream oss2;
 	        oss2 << "DEBUG: Client closed connection" << std::endl;
-			_logger->debug(oss2.str());
+			_logger.debug(oss2.str());
 			}
 	    else
 		{
 			std::ostringstream oss3;
 			oss3 << "DEBUG: Error reading from socket: "
 			<< strerror(errno) << std::endl;
-			_logger->error(oss3.str());
+			_logger.error(oss3.str());
 		}
 		return false;
 	}
@@ -132,13 +132,13 @@ bool	HttpRequest::read(Socket& clientSocket)
 		std::ostringstream oss4;
 		oss4 << "DEBUG: First line of request: " 
 			<< _buffer.substr(0, firstLineEnd) << std::endl;
-		_logger->debug(oss4.str());
+		_logger.debug(oss4.str());
 		}
 	else{
 		std::ostringstream oss5;
 		oss5 << "DEBUG: Request buffer (incomplete): " 
 		<< _buffer << std::endl;
-		_logger->debug(oss5.str());
+		_logger.debug(oss5.str());
 		}
 	// Process the buffer based on current state
 	bool done = false;
@@ -147,7 +147,7 @@ bool	HttpRequest::read(Socket& clientSocket)
 	{
 	    std::ostringstream oss1;
 		oss1 << "DEBUG: Request parse state: " << _state << std::endl;
-		_logger->debug(oss1.str());
+		_logger.debug(oss1.str());
 		switch (_state)
 		{
 			case REQUEST_LINE:
@@ -173,7 +173,7 @@ bool	HttpRequest::read(Socket& clientSocket)
 					_state = COMPLETE;
 					std::ostringstream oss6;
 					oss6 << "DEBUG: Request is COMPLETE after chunked end" << std::endl;
-					_logger->debug(oss6.str());
+					_logger.debug(oss6.str());
 					
 				}
 				else
@@ -185,14 +185,14 @@ bool	HttpRequest::read(Socket& clientSocket)
 			{
 			    std::ostringstream oss6;
 				oss6 << "DEBUG: Request is COMPLETE" << std::endl;
-				_logger->debug(oss6.str());
+				_logger.debug(oss6.str());
 				return true;
 			}
 			case ERROR:
 			{
 				std::ostringstream oss7;
 			    oss7 << "DEBUG: Request has ERROR state" << std::endl;
-				_logger->debug(oss7.str());
+				_logger.debug(oss7.str());
 				return true;
 				
 			}
@@ -205,7 +205,7 @@ bool	HttpRequest::read(Socket& clientSocket)
 	std::ostringstream oss8;
 	oss8 << "DEBUG: Returning from read(), request is " 
 	    << (isComplete ? "COMPLETE" : "INCOMPLETE") << std::endl;
-	_logger->debug(oss8.str());
+	_logger.debug(oss8.str());
 	
 	return isComplete;
 }
@@ -221,7 +221,7 @@ bool	HttpRequest::parseRequestLine(void)
 	{
 	    std::ostringstream oss9;
 		oss9 << "DEBUG: Request line incomplete, waiting for more data" << std::endl;
-		_logger->debug(oss9.str());
+		_logger.debug(oss9.str());
 		return false;
 	}
 		
@@ -230,7 +230,7 @@ bool	HttpRequest::parseRequestLine(void)
 	
 	std::ostringstream oss10;
 	oss10 << "DEBUG: Parsing request line: " << line << std::endl;
-	_logger->debug(oss10.str());
+	_logger.debug(oss10.str());
 	
 	std::istringstream lineStream(line);
 	if (!(lineStream >> _method >> _uri >> _httpVersion))
@@ -238,14 +238,14 @@ bool	HttpRequest::parseRequestLine(void)
 	    std::ostringstream oss11;
 		oss11 << "DEBUG: Failed to parse request line" << std::endl;
 		_state = ERROR;
-		_logger->debug(oss11.str());
+		_logger.debug(oss11.str());
 		return false;
 	}
 	
 	std::ostringstream oss12;
 	oss12 << "DEBUG: Method=" << _method << ", URI=" << _uri 
 	    << ", Version=" << _httpVersion << std::endl;
-	_logger->debug(oss12.str());
+	_logger.debug(oss12.str());
 	
 	// Parse the URI into path and query
 	size_t queryPos = _uri.find('?');
@@ -260,7 +260,7 @@ bool	HttpRequest::parseRequestLine(void)
 	}
 	std::ostringstream oss13;
 	oss13 << "DEBUG: Path=" << _path << ", Query=" << _query << std::endl;
-	_logger->debug(oss13.str());
+	_logger.debug(oss13.str());
 	_state = HEADERS;
 	return true;
 }
@@ -278,7 +278,7 @@ bool	HttpRequest::parseHeaders(void)
 		{
 		    std::ostringstream oss1;
 			oss1 << "DEBUG: Headers incomplete, waiting for more data" << std::endl;
-			_logger->debug(oss1.str());
+			_logger.debug(oss1.str());
 			return false;
 		}
 			
@@ -289,7 +289,7 @@ bool	HttpRequest::parseHeaders(void)
 			
 			std::ostringstream oss2;
 			oss2 << "DEBUG: End of headers found" << std::endl;
-			_logger->debug(oss2.str());
+			_logger.debug(oss2.str());
 			
 			// Determine the next state based on headers
 			std::string transferEncoding = getHeader("Transfer-Encoding");
@@ -300,7 +300,7 @@ bool	HttpRequest::parseHeaders(void)
 			{
 			    std::ostringstream oss3;
 				oss3 << "DEBUG: Found chunked encoding" << std::endl;
-				_logger->debug(oss3.str());
+				_logger.debug(oss3.str());
 				_chunked = true;
 				_state = CHUNKED_SIZE;
 			}
@@ -312,7 +312,7 @@ bool	HttpRequest::parseHeaders(void)
 					_contentLength = strtoul(contentLengthStr.c_str(), NULL, 10);
 					std::ostringstream oss4;
 					oss4 << "DEBUG: Content-Length: " << _contentLength << std::endl;
-					_logger->debug(oss4.str());
+					_logger.debug(oss4.str());
 					_state = BODY;
 				}
 				else
@@ -320,7 +320,7 @@ bool	HttpRequest::parseHeaders(void)
 					// No content expected, request is complete
 					std::ostringstream oss5;
 					oss5 << "DEBUG: No body expected, request is complete" << std::endl;
-					_logger->debug(oss5.str());
+					_logger.debug(oss5.str());
 					_state = COMPLETE;
 				}
 			}
@@ -333,14 +333,14 @@ bool	HttpRequest::parseHeaders(void)
 		
 		std::ostringstream oss6;
 		oss6 << "DEBUG: Parsing header line: " << line << std::endl;
-		_logger->debug(oss6.str());
+		_logger.debug(oss6.str());
 		
 		size_t colonPos = line.find(':');
 		if (colonPos == std::string::npos)
 		{
 		    std::ostringstream oss7;
 			oss7 << "DEBUG: Invalid header line: " << line << std::endl;
-			_logger->debug(oss7.str());
+			_logger.debug(oss7.str());
 			_state = ERROR;
 			return false;
 		}
@@ -361,7 +361,7 @@ bool	HttpRequest::parseHeaders(void)
 		}
 		std::ostringstream oss8;
 		oss8 << "DEBUG: Header: [" << name << "] = [" << value << "]" << std::endl;
-		_logger->debug(oss8.str());
+		_logger.debug(oss8.str());
 		_headers[name] = value;
 	}
 }
@@ -374,7 +374,7 @@ bool	HttpRequest::parseBody(void)
 	std::ostringstream oss1;
 	oss1 << "DEBUG: Parsing body, have " << _buffer.size() 
 	<< " bytes, need " << _contentLength << std::endl;
-	_logger->debug(oss1.str());
+	_logger.debug(oss1.str());
 
 	if (_buffer.size() >= _contentLength)
 	{
@@ -383,12 +383,12 @@ bool	HttpRequest::parseBody(void)
 		_state = COMPLETE;
 		std::ostringstream oss2;
 		oss2 << "DEBUG: Body complete with " << _body.size() << " bytes" << std::endl;
-		_logger->debug(oss2.str());
+		_logger.debug(oss2.str());
 		return true;
 	}
 	std::ostringstream oss3;
 	oss3 << "DEBUG: Body incomplete, waiting for more data" << std::endl;
-	_logger->debug(oss3.str());
+	_logger.debug(oss3.str());
 	return false;
 }
 
@@ -403,7 +403,7 @@ bool	HttpRequest::parseChunkedSize(void)
 	{
 	    std::ostringstream oss1;
 		oss1 << "DEBUG: Chunk size line incomplete" << std::endl;
-		_logger->debug(oss1.str());
+		_logger.debug(oss1.str());
 		return false;
 	}
 		
@@ -416,14 +416,14 @@ bool	HttpRequest::parseChunkedSize(void)
 	
 	std::ostringstream oss2;
 	oss2 << "DEBUG: Chunk size: " << _chunkSize << " bytes" << std::endl;
-	_logger->debug(oss2.str());
+	_logger.debug(oss2.str());
 	
 	if (_chunkSize == 0)
 	{
 		// Final chunk, look for trailing headers (not implemented)
 		std::ostringstream oss3;
 		oss3 << "DEBUG: Final chunk (size 0) received" << std::endl;
-		_logger->debug(oss3.str());
+		_logger.debug(oss3.str());
 		_state = CHUNKED_END;
 	}
 	else
@@ -442,7 +442,7 @@ bool	HttpRequest::parseChunkedData(void)
     std::ostringstream oss1;
 	oss1 << "DEBUG: Parsing chunk data, have " << _buffer.size() 
         << " bytes, need " << _chunkSize + 2 << std::endl;
-		_logger->debug(oss1.str());
+		_logger.debug(oss1.str());
         
 	if (_buffer.size() >= _chunkSize + 2)  // +2 for CRLF
 	{
@@ -454,13 +454,13 @@ bool	HttpRequest::parseChunkedData(void)
 		std::ostringstream oss2;
 		oss2 << "DEBUG: Chunk data complete, body now " 
 		    << _body.size() << " bytes" << std::endl;
-		_logger->debug(oss2.str());
+		_logger.debug(oss2.str());
 		return true;
 	}
 	
 	std::ostringstream oss3;
 	oss3 << "DEBUG: Chunk data incomplete, waiting for more data" << std::endl;
-	_logger->debug(oss3.str());
+	_logger.debug(oss3.str());
 	return false;
 }
 
@@ -472,7 +472,7 @@ HttpResponse	HttpRequest::process(const Config& config)
     std::ostringstream oss1;
 	oss1 << "DEBUG: Processing request: " << _method << " " 
 	<< _uri << " " << _httpVersion << std::endl;
-	_logger->debug(oss1.str());
+	_logger.debug(oss1.str());
     
 	HttpResponse response(_logger);
 	
@@ -482,7 +482,7 @@ HttpResponse	HttpRequest::process(const Config& config)
 	
 	std::ostringstream oss2;
 	oss2<< "DEBUG: Host header: " << host << std::endl;
-	_logger->debug(oss2.str());
+	_logger.debug(oss2.str());
 	
 	size_t colonPos = host.find(':');
 	if (colonPos != std::string::npos)
@@ -491,7 +491,7 @@ HttpResponse	HttpRequest::process(const Config& config)
 		host = host.substr(0, colonPos);
 		std::ostringstream oss3;
 		oss3 << "DEBUG: Extracted host=" << host << ", port=" << port << std::endl;
-		_logger->debug(oss3.str());
+		_logger.debug(oss3.str());
 	}
 	
 	// Find the appropriate server configuration
@@ -501,7 +501,7 @@ HttpResponse	HttpRequest::process(const Config& config)
 	{
 		std::ostringstream oss4;
 		oss4 << "DEBUG: No matching server configuration found" << std::endl;
-		_logger->debug(oss4.str());
+		_logger.debug(oss4.str());
 		response.setStatus(404);
 		response.setBody(config.getDefaultErrorPage(404));
 		return response;
@@ -510,7 +510,7 @@ HttpResponse	HttpRequest::process(const Config& config)
 	std::ostringstream oss5;
 	oss5 << "DEBUG: Found matching server for " << host 
 	    << ":" << port << std::endl;
-		_logger->debug(oss5.str());
+		_logger.debug(oss5.str());
 	
 	// Find the appropriate location configuration
 	const LocationConfig* location = findLocation(*server);
@@ -520,14 +520,14 @@ HttpResponse	HttpRequest::process(const Config& config)
 		std::ostringstream oss6;
 		oss6 << "DEBUG: No matching location configuration found for " 
 		<< _path << std::endl;
-		_logger->debug(oss6.str());
+		_logger.debug(oss6.str());
 		response.setStatus(404);
 		response.setBody(config.getDefaultErrorPage(404));
 		return response;
 	}
 	std::ostringstream oss7;
 	oss7 << "DEBUG: Found matching location: " << location->path << std::endl;
-	_logger->debug(oss7.str());
+	_logger.debug(oss7.str());
 	
 	// Check if method is allowed
 	if (!location->allowedMethods.empty() && 
@@ -535,7 +535,7 @@ HttpResponse	HttpRequest::process(const Config& config)
 	{
 		std::ostringstream oss8;
 		oss8 << "DEBUG: Method " << _method << " not allowed" << std::endl;
-		_logger->debug(oss8.str());
+		_logger.debug(oss8.str());
 		response.setStatus(405);
 		response.setBody(config.getDefaultErrorPage(405));
 		return response;
@@ -546,7 +546,7 @@ HttpResponse	HttpRequest::process(const Config& config)
 	{
 	    std::ostringstream oss9;
 		oss9 << "DEBUG: Redirecting to " << location->redirect << std::endl;
-		_logger->debug(oss9.str());
+		_logger.debug(oss9.str());
 		response.setStatus(301);
 		response.addHeader("Location", location->redirect);
 		return response;
@@ -569,7 +569,7 @@ HttpResponse	HttpRequest::process(const Config& config)
 	{
 		std::ostringstream oss10;
 		oss10 << "DEBUG: Unsupported method " << _method << std::endl;
-		_logger->debug(oss10.str());
+		_logger.debug(oss10.str());
 		response.setStatus(501);
 		response.setBody(config.getDefaultErrorPage(501));
 		return response;
@@ -665,7 +665,7 @@ HttpResponse HttpRequest::handleGet(const LocationConfig& location,
 {
 	std::ostringstream oss;
 	oss << "DEBUG: Handling GET request for " << _path;
-	_logger->debug(oss.str());
+	_logger.debug(oss.str());
 
 	std::string fullPath = location.root + _path;
 
@@ -673,7 +673,7 @@ HttpResponse HttpRequest::handleGet(const LocationConfig& location,
 	{
 		std::ostringstream oss;
 		oss << "DEBUG: Path traversal detected: " << _path;
-		_logger->debug(oss.str());
+		_logger.debug(oss.str());
 
 		response.setStatus(403);
 		response.setBody(config.getDefaultErrorPage(403));
@@ -684,7 +684,7 @@ HttpResponse HttpRequest::handleGet(const LocationConfig& location,
 	{
 		std::ostringstream oss;
 		oss << "DEBUG: Detected CGI file, delegating to CGI handler";
-		_logger->debug(oss.str());
+		_logger.debug(oss.str());
 
 		return handleCgi(location, response, config);
 	}
@@ -702,7 +702,7 @@ HttpResponse HttpRequest::handleGet(const LocationConfig& location,
 	{
 		std::ostringstream oss;
 		oss << "DEBUG: File not found: " << fullPath;
-		_logger->debug(oss.str());
+		_logger.debug(oss.str());
 
 		if (location.autoindex && !_path.empty() && _path[_path.length() - 1] == '/')
 		{
@@ -721,7 +721,7 @@ HttpResponse HttpRequest::handleGet(const LocationConfig& location,
 	std::ostringstream oss2;
 	oss2 << "DEBUG: Successfully read " << content.size()
 	     << " bytes from " << fullPath;
-	_logger->debug(oss2.str());
+	_logger.debug(oss2.str());
 
 	response.setStatus(200);
 	response.setBody(content);
@@ -738,7 +738,7 @@ HttpResponse HttpRequest::handlePost(const LocationConfig& location,
 {
 	std::ostringstream oss;
 	oss << "DEBUG: Handling POST request for " << _path;
-	_logger->debug(oss.str());
+	_logger.debug(oss.str());
 
 	std::string fullPath = location.root + _path;
 
@@ -746,7 +746,7 @@ HttpResponse HttpRequest::handlePost(const LocationConfig& location,
 	{
 		std::ostringstream oss;
 		oss << "DEBUG: Detected CGI file, delegating to CGI handler";
-		_logger->debug(oss.str());
+		_logger.debug(oss.str());
 
 		return handleCgi(location, response, config);
 	}
@@ -755,7 +755,7 @@ HttpResponse HttpRequest::handlePost(const LocationConfig& location,
 	{
 		std::ostringstream oss;
 		oss << "DEBUG: Upload not allowed for this location";
-		_logger->debug(oss.str());
+		_logger.debug(oss.str());
 
 		response.setStatus(403);
 		response.setBody(config.getDefaultErrorPage(403));
@@ -784,7 +784,7 @@ HttpResponse HttpRequest::handlePost(const LocationConfig& location,
 		{
 			std::ostringstream oss;
 			oss << "DEBUG: Failed to create upload file: " << uploadPath;
-			_logger->debug(oss.str());
+			_logger.debug(oss.str());
 
 			response.setStatus(500);
 			response.setBody(config.getDefaultErrorPage(500));
@@ -797,7 +797,7 @@ HttpResponse HttpRequest::handlePost(const LocationConfig& location,
 		std::ostringstream oss2;
 		oss2 << "DEBUG: Successfully uploaded " << _body.size() 
 		     << " bytes to " << uploadPath;
-		_logger->debug(oss2.str());
+		_logger.debug(oss2.str());
 
 		response.setStatus(201);
 		std::ostringstream sizeOss;
@@ -820,7 +820,7 @@ HttpResponse HttpRequest::handleDelete(const LocationConfig& location,
 {
 	std::ostringstream oss;
 	oss << "DEBUG: Handling DELETE request for " << _path;
-	_logger->debug(oss.str());
+	_logger.debug(oss.str());
 
 	std::string fullPath = location.root + _path;
 
@@ -828,7 +828,7 @@ HttpResponse HttpRequest::handleDelete(const LocationConfig& location,
 	{
 		std::ostringstream oss;
 		oss << "DEBUG: Path traversal detected: " << _path;
-		_logger->debug(oss.str());
+		_logger.debug(oss.str());
 
 		response.setStatus(403);
 		response.setBody(config.getDefaultErrorPage(403));
@@ -840,7 +840,7 @@ HttpResponse HttpRequest::handleDelete(const LocationConfig& location,
 	{
 		std::ostringstream oss;
 		oss << "DEBUG: File not found for deletion: " << fullPath;
-		_logger->debug(oss.str());
+		_logger.debug(oss.str());
 
 		response.setStatus(404);
 		response.setBody(config.getDefaultErrorPage(404));
@@ -852,7 +852,7 @@ HttpResponse HttpRequest::handleDelete(const LocationConfig& location,
 	{
 		std::ostringstream oss;
 		oss << "DEBUG: Failed to delete file: " << fullPath;
-		_logger->debug(oss.str());
+		_logger.debug(oss.str());
 
 		response.setStatus(500);
 		response.setBody(config.getDefaultErrorPage(500));
@@ -861,7 +861,7 @@ HttpResponse HttpRequest::handleDelete(const LocationConfig& location,
 
 	std::ostringstream oss2;
 	oss2 << "DEBUG: Successfully deleted file: " << fullPath;
-	_logger->debug(oss2.str());
+	_logger.debug(oss2.str());
 
 	response.setStatus(204); // No Content
 	return response;
@@ -946,7 +946,7 @@ HttpResponse HttpRequest::generateDirectoryListing(const LocationConfig& locatio
 {
 	std::ostringstream oss;
 	oss << "DEBUG: Generating directory listing for " << _path;
-	_logger->debug(oss.str());
+	_logger.debug(oss.str());
 
 	std::string dirPath = location.root + _path;
 	DIR* dir = opendir(dirPath.c_str());
@@ -955,7 +955,7 @@ HttpResponse HttpRequest::generateDirectoryListing(const LocationConfig& locatio
 	{
 		std::ostringstream oss;
 		oss << "DEBUG: Failed to open directory: " << dirPath;
-		_logger->debug(oss.str());
+		_logger.debug(oss.str());
 
 		response.setStatus(403);
 		return response;
@@ -1013,7 +1013,7 @@ HttpResponse HttpRequest::handleFileUpload(const LocationConfig& location,
 {
 	std::ostringstream oss;
 	oss << "DEBUG: Handling multipart file upload";
-	_logger->debug(oss.str());
+	_logger.debug(oss.str());
 
 	std::string contentType = getHeader("Content-Type");
 	size_t boundaryPos = contentType.find("boundary=");
@@ -1022,7 +1022,7 @@ HttpResponse HttpRequest::handleFileUpload(const LocationConfig& location,
 	{
 		std::ostringstream oss;
 		oss << "DEBUG: No boundary found in multipart data";
-		_logger->debug(oss.str());
+		_logger.debug(oss.str());
 
 		response.setStatus(400);
 		response.setBody(config.getDefaultErrorPage(400));
@@ -1033,7 +1033,7 @@ HttpResponse HttpRequest::handleFileUpload(const LocationConfig& location,
 
 	std::ostringstream oss2;
 	oss2 << "DEBUG: Using boundary: " << boundary;
-	_logger->debug(oss2.str());
+	_logger.debug(oss2.str());
 
 	size_t startPos = _body.find(boundary);
 	if (startPos == std::string::npos)
@@ -1078,7 +1078,7 @@ HttpResponse HttpRequest::handleFileUpload(const LocationConfig& location,
 	{
 		std::ostringstream oss;
 		oss << "DEBUG: Failed to create upload file: " << uploadPath;
-		_logger->debug(oss.str());
+		_logger.debug(oss.str());
 
 		response.setStatus(500);
 		response.setBody(config.getDefaultErrorPage(500));
@@ -1091,7 +1091,7 @@ HttpResponse HttpRequest::handleFileUpload(const LocationConfig& location,
 	std::ostringstream oss3;
 	oss3 << "DEBUG: Successfully uploaded " << fileContent.size()
 	     << " bytes to " << uploadPath;
-	_logger->debug(oss3.str());
+	_logger.debug(oss3.str());
 
 	response.setStatus(201);
 	std::ostringstream sizeOss;
@@ -1116,7 +1116,7 @@ HttpResponse	HttpRequest::handleFormData(const LocationConfig& location,
 	
 	std::ostringstream oss;
 	oss << "DEBUG: Handling form data" << std::endl;
-	_logger->debug(oss.str());
+	_logger.debug(oss.str());
 	
 	response.setStatus(200);
 	response.setBody("<html><body><h1>Form Data Received</h1>"
@@ -1138,7 +1138,7 @@ HttpResponse HttpRequest::handleCgi(const LocationConfig& location,
 
 	std::ostringstream oss;
 	oss << "DEBUG: Handling CGI request for " << _path;
-	_logger->debug(oss.str());
+	_logger.debug(oss.str());
 
 	std::string scriptPath = location.root + _path;
 
@@ -1146,7 +1146,7 @@ HttpResponse HttpRequest::handleCgi(const LocationConfig& location,
 	{
 		std::ostringstream oss;
 		oss << "DEBUG: Path traversal detected: " << _path;
-		_logger->debug(oss.str());
+		_logger.debug(oss.str());
 
 		response.setStatus(403);
 		response.setBody("Forbidden: Path traversal detected");
@@ -1157,7 +1157,7 @@ HttpResponse HttpRequest::handleCgi(const LocationConfig& location,
 	{
 		std::ostringstream oss;
 		oss << "DEBUG: File is not a CGI script: " << scriptPath;
-		_logger->debug(oss.str());
+		_logger.debug(oss.str());
 
 		response.setStatus(403);
 		response.setBody("Forbidden: Not a CGI script");

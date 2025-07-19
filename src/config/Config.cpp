@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:20:34 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/05 16:36:36 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/19 16:00:50 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ Config::Config(void) : _configPath("")
 /**
  * Constructor reads and parses the configuration file
  */
-Config::Config(const std::string& configPath, Logger& logger) : _configPath(configPath), _logger(logger)
+Config::Config(const std::string& configPath, Logger logger) : _configPath(configPath), _logger(logger)
 {
 	parseConfig();
 	validateConfig();

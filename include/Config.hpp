@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:10:12 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/05 16:18:23 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/19 16:01:06 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,7 +104,7 @@ public:
 	/**
 	 * Constructor with path to configuration file
 	 */
-	Config(const std::string& configPath, Logger& logger);
+	Config(const std::string& configPath, Logger logger);
 	
 	/**
 	 * Copy constructor

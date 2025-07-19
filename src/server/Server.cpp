@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/19 15:55:34 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/19 16:48:05 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -179,7 +179,7 @@ void	Server::handleRequests(fd_set *readFdsReady)
             std::ostringstream oss;
 		    oss << "DEBUG: Client socket " << clientFd 
             << " is ready for reading" << std::endl;
-            _logger.debug(oss.str());
+            _logger.log(oss.str());
 			try
 			{
 				if (!_requests.count(clientFd))

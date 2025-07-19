@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/30 17:23:07 by asanni            #+#    #+#             */
-/*   Updated: 2025/07/19 15:55:53 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/19 16:50:06 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,45 +25,64 @@ Logger& Logger::operator=(const Logger& other) {
 
 Logger::~Logger(void) {}
 
-void Logger::setLevel(LogLevel level) {
-	_level = level;
+void Logger::setLevel(std::string level) {
+	level = toLower(level);
+	if (level == "critical")
+		_level = LOG_CRITICAL;
+	else if(level == "error")
+		_level = LOG_ERROR;
+	else if(level == "warning")
+		_level = LOG_WARNING;
+	else if(level == "info")
+		_level = LOG_INFO;
+	else if(level == "debug")
+		_level = LOG_DEBUG;
 }
 
 LogLevel Logger::getLevel(void) const {
 	return _level;
 }
 
-void Logger::log(LogLevel level, const std::string& message) const {
-	switch (level) {
+void Logger::log(const std::string& message) const {
+	switch (_level) {
 		case LOG_CRITICAL:
-			std::cerr << "[ERROR] " << message << std::endl;
+			critical(message);
 			break;
 		case LOG_ERROR:
-			std::cerr << "[ERROR] " << message << std::endl;
+			error(message);
 			break;
 		case LOG_WARNING:
-			std::cout << "[INFO] " << message << std::endl;
+			warning(message);
 			break;
 		case LOG_INFO:
-			std::cout << "[INFO] " << message << std::endl;
+			info(message);
 			break;
 		case LOG_DEBUG:
-			std::cout << "[DEBUG] " << message << std::endl;
+			debug(message);
 			
 	}
 }
 
+void Logger::critical(const std::string& message) const {
+	std::cerr << "[CRITICAL] " << message << std::endl;
+}
+
 void Logger::error(const std::string& message) const {
-	if (_level == LOG_ERROR)
-		log(LOG_ERROR, message);
+	std::cerr << "[ERROR] " << message << std::endl;
+}
+
+void Logger::warning(const std::string& message) const {
+	std::cout << "[WARNING] " << message << std::endl;
 }
 
 void Logger::info(const std::string& message) const {
-	if (_level == LOG_INFO)
-		log(LOG_INFO, message);
+	std::cout << "[INFO] " << message << std::endl;
 }
 
 void Logger::debug(const std::string& message) const {
-	if (_level == LOG_DEBUG)
-		log(LOG_DEBUG, message);
+	std::cout << "[DEBUG] " << message << std::endl;
+}
+
+std::string Logger::toLower(std::string level){
+	
 }

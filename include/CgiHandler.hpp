@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/13 10:00:00 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/05 17:21:07 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/19 15:58:31 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ private:
 	std::string							_requestBody;
 	std::string							_workingDirectory;
 	std::map<std::string, std::string>	_envVars;
-	Logger*								_logger;
+	Logger								_logger;
 	
 	/**
 	 * Setup CGI environment variables according to CGI/1.1 specification
@@ -90,7 +90,7 @@ public:
 	/**
 	 * Constructor with Logger
 	 */
-	CgiHandler(Logger& logger);
+	CgiHandler(Logger logger);
 	
 	/**
 	 * Copy constructor
