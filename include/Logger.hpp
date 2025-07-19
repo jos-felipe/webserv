@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/05 14:17:10 by asanni            #+#    #+#             */
-/*   Updated: 2025/07/19 16:47:50 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/19 17:29:16 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,9 +18,6 @@
 
 
 
-# ifndef LOG_LEVEL
-# define LOG_LEVEL INFO
-# endif
 
 enum LogLevel {
 	LOG_DEBUG,
@@ -29,6 +26,10 @@ enum LogLevel {
 	LOG_ERROR,
 	LOG_CRITICAL
 };
+
+# ifndef LOG_LEVEL
+# define LOG_LEVEL LOG_INFO
+# endif
 
 class Logger {
 private:
@@ -44,9 +45,8 @@ public:
 	void setLevel(std::string level);
 	LogLevel getLevel(void) const;
 
-	void log(const std::string& message) const;
+	void log(LogLevel level, const std::string& message) const;
 
-	// Métodos convenientes por nível:
 	void debug(const std::string& message) const;
 	void info(const std::string& message) const;
 	void warning(const std::string& message) const;

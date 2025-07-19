@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:29:42 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/19 16:41:52 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/19 17:11:55 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,20 +72,20 @@ int main(int argc, char **argv)
 
 		Server server(config, logger);    // ✅ Injetando logger local
 
-		logger.info("Starting server...");
+		logger.log(LOG_INFO, "Starting server...");
 		server.start();
 
 		while (g_running)
 			server.run();
 
 		server.stop();
-		logger.info("Server stopped.");
+		logger.log(LOG_INFO, "Server stopped.");
 
 		return EXIT_SUCCESS;
 	}
 	catch (const std::exception &e) {
 		Logger logger;                    // ✅ Logger local em caso de erro
-		logger.error(std::string("Error: ") + e.what());
+		logger.log(LOG_ERROR, std::string("Error: ") + e.what());
 		return EXIT_FAILURE;
 	}
 }

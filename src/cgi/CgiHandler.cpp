@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/13 10:00:00 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/19 15:59:25 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/19 17:07:27 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,7 +106,7 @@ HttpResponse	CgiHandler::handleCgiRequest(const HttpRequest& request,
 {
 	std::ostringstream oss1;
 	oss1 << "DEBUG: Handling CGI request for " << scriptPath << std::endl;
-	_logger.debug(oss1.str());
+	_logger.log(LOG_DEBUG, oss1.str());
 	
 	HttpResponse response;
 	
@@ -116,7 +116,7 @@ HttpResponse	CgiHandler::handleCgiRequest(const HttpRequest& request,
 	{
 		std::ostringstream oss2;
 		oss2 << "DEBUG: CGI script not found: " << scriptPath << std::endl;
-		_logger.debug(oss2.str());
+		_logger.log(LOG_DEBUG, oss2.str());
 		response.setStatus(404);
 		response.setBody("CGI script not found");
 		return response;
@@ -126,7 +126,7 @@ HttpResponse	CgiHandler::handleCgiRequest(const HttpRequest& request,
 	{
 		std::ostringstream oss3;
 		oss3 << "DEBUG: CGI script not executable: " << scriptPath << std::endl;
-		_logger.debug(oss3.str());
+		_logger.log(LOG_DEBUG, oss3.str());
 		response.setStatus(403);
 		response.setBody("CGI script not executable");
 		return response;
@@ -175,7 +175,7 @@ HttpResponse	CgiHandler::handleCgiRequest(const HttpRequest& request,
 	{
 		std::ostringstream oss4;
 		oss4 << "DEBUG: CGI execution failed" << std::endl;
-		_logger.debug(oss4.str());
+		_logger.log(LOG_DEBUG, oss4.str());
 		response.setStatus(500);
 		response.setBody("Internal Server Error: CGI execution failed");
 		return response;
@@ -243,7 +243,7 @@ void	CgiHandler::setupEnvironment(const HttpRequest& request, const LocationConf
 	
 	std::ostringstream oss1;
 	oss1 << "DEBUG: CGI environment variables set up:" << std::endl;
-	_logger.debug(oss1.str());
+	_logger.log(LOG_DEBUG, oss1.str());
 	for (std::map<std::string, std::string>::const_iterator it = _envVars.begin();
 		 it != _envVars.end(); ++it)
 	{
@@ -264,7 +264,7 @@ std::string	CgiHandler::executeCgi(void)
 	{
 		std::ostringstream oss1;
 		oss1 << "DEBUG: Failed to create pipes: " << strerror(errno) << std::endl;
-		_logger.error(oss1.str());
+		_logger.log(LOG_ERROR, oss1.str());
 		return "";
 	}
 	
@@ -274,7 +274,7 @@ std::string	CgiHandler::executeCgi(void)
 	{
 		std::ostringstream oss2;
 		oss2 << "DEBUG: Fork failed: " << strerror(errno) << std::endl;
-		_logger.error(oss2.str());
+		_logger.log(LOG_ERROR, oss2.str());
 		close(inputPipe[0]);
 		close(inputPipe[1]);
 		close(outputPipe[0]);
@@ -296,7 +296,7 @@ std::string	CgiHandler::executeCgi(void)
 		{
 			std::ostringstream oss3;
 			oss3 << "DEBUG: dup2 failed: " << strerror(errno) << std::endl;
-			_logger.error(oss3.str());
+			_logger.log(LOG_ERROR, oss3.str());
 			exit(1);
 		}
 		
@@ -309,7 +309,7 @@ std::string	CgiHandler::executeCgi(void)
 		{
 			std::ostringstream oss4;
 			oss4 << "DEBUG: chdir failed: " << strerror(errno) << std::endl;
-			_logger.error(oss4.str());
+			_logger.log(LOG_ERROR, oss4.str());
 			exit(1);
 		}
 		
@@ -347,7 +347,7 @@ std::string	CgiHandler::executeCgi(void)
 		// If we reach here, execve failed
 		std::ostringstream oss5;
 		oss5 << "DEBUG: execve failed: " << strerror(errno) << std::endl;
-		_logger.error(oss5.str());
+		_logger.log(LOG_ERROR, oss5.str());
 		freeEnvArray(envArray);
 		exit(1);
 	}
@@ -367,7 +367,7 @@ std::string	CgiHandler::executeCgi(void)
 			{
 				std::ostringstream oss5;
 				oss5 << "DEBUG: Failed to write to CGI stdin: " << strerror(errno) << std::endl;
-				_logger.error(oss5.str());
+				_logger.log(LOG_ERROR, oss5.str());
 			}
 		}
 		close(inputPipe[1]); // Signal EOF to CGI
@@ -392,11 +392,11 @@ std::string	CgiHandler::executeCgi(void)
 		{
 			std::ostringstream oss6;
 			oss6 << "DEBUG: CGI script exited with status " << WEXITSTATUS(status) << std::endl;
-			_logger.debug(oss6.str());
+			_logger.log(LOG_DEBUG, oss6.str());
 		}
 		std::ostringstream oss7;
 		oss7 << "DEBUG: CGI output (" << output.length() << " bytes):" << output << std::endl;
-		_logger.debug(oss7.str());
+		_logger.log(LOG_DEBUG, oss7.str());
 		
 		return output;
 	}
@@ -474,7 +474,7 @@ void	CgiHandler::parseCgiOutput(const std::string& output, HttpResponse& respons
 		}
 		std::ostringstream oss;
 		oss << "DEBUG: CGI header: " << headerName << ": " << headerValue << std::endl;
-		_logger.debug(oss.str());
+		_logger.log(LOG_DEBUG, oss.str());
 	}
 	
 	// Set default status if not set by CGI
