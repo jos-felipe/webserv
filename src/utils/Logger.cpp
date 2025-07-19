@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Logger.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: asanni <asanni@student.42sp.org.br>        +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/30 17:23:07 by asanni            #+#    #+#             */
-/*   Updated: 2025/07/15 19:32:40 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/19 15:55:53 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,19 +35,19 @@ LogLevel Logger::getLevel(void) const {
 
 void Logger::log(LogLevel level, const std::string& message) const {
 	switch (level) {
-		case CRITICAL:
+		case LOG_CRITICAL:
 			std::cerr << "[ERROR] " << message << std::endl;
 			break;
-		case ERROR:
+		case LOG_ERROR:
 			std::cerr << "[ERROR] " << message << std::endl;
 			break;
-		case WARNING:
+		case LOG_WARNING:
 			std::cout << "[INFO] " << message << std::endl;
 			break;
-		case INFO:
+		case LOG_INFO:
 			std::cout << "[INFO] " << message << std::endl;
 			break;
-		case DEBUG:
+		case LOG_DEBUG:
 			std::cout << "[DEBUG] " << message << std::endl;
 			
 	}

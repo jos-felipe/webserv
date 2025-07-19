@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Logger.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: asanni <asanni@student.42sp.org.br>        +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/05 14:17:10 by asanni            #+#    #+#             */
-/*   Updated: 2025/07/15 19:27:03 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/19 15:49:27 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,11 +23,11 @@
 # endif
 
 enum LogLevel {
-	DEBUG,
-	INFO,
-	WARNING,
-	ERROR,
-	CRITICAL
+	LOG_DEBUG,
+	LOG_INFO,
+	LOG_WARNING,
+	LOG_ERROR,
+	LOG_CRITICAL
 };
 
 class Logger {
