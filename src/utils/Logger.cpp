@@ -49,7 +49,7 @@ void Logger::log(LogLevel level, const std::string& message) const {
 			break;
 		case DEBUG:
 			std::cout << "[DEBUG] " << message << std::endl;
-			break;
+			
 	}
 }
 
