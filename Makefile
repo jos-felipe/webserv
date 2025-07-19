@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+         #
+#    By: asanni <asanni@student.42sp.org.br>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/03/24 12:00:00 by josfelip          #+#    #+#              #
-#    Updated: 2025/03/26 11:44:35 by josfelip         ###   ########.fr        #
+#    Updated: 2025/07/12 17:10:09 by asanni           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,7 +16,7 @@ NAME = webserv
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 DEPFLAGS = -MMD -MP
-DBGFLAGS = -g3
+DBGFLAGS = -g3 -D LOG_LEVEL=LOG_DEBUG
 
 # Directories
 SRC_DIR = src
@@ -83,10 +83,7 @@ re: fclean all
 debug:
 	@make WITH_DEBUG=TRUE --no-print-directory
 
-run: all
-	./$(NAME)
-
 # Include dependency files
 -include $(DEP)
 
-.PHONY: all clean fclean re debug run
+.PHONY: all clean fclean re debug
