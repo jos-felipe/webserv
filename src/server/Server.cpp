@@ -62,7 +62,6 @@ Server&	Server::operator=(const Server& other)
  */
 Server::~Server(void)
 {
-	stop();
 }
 
 /**
@@ -411,10 +410,6 @@ void	Server::run(void)
  */
 void	Server::stop(void)
 {
-    if (_stopped)
-        return;
-    _stopped = true;
-
     for (std::map<int, Socket>::iterator it = _clientSockets.begin();
 		it != _clientSockets.end(); ++it)
 	{

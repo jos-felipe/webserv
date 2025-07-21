@@ -24,8 +24,8 @@ bool	g_running = true;
 void	signalHandler(int signum)
 {
 	(void)signum;
-	g_running = false;
 	std::cout << "\nShutting down server..." << std::endl;
+	g_running = false;
 }
 
 /**
@@ -78,6 +78,7 @@ int	main(int argc, char **argv)
 		while (g_running)
 			server.run();
 
+		server.stop();
 		return (EXIT_SUCCESS);
 	}
 	catch (const std::exception &e)
