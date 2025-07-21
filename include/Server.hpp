@@ -42,6 +42,7 @@ private:
 	fd_set						_writeFds;
 	fd_set						_errorFds;
 	int							_maxFd;
+	bool						_stopped;  // Flag to indicate if server is stopped
 	
 	/**
 	 * Initialize listening sockets based on configuration

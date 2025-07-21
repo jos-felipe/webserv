@@ -411,7 +411,11 @@ void	Server::run(void)
  */
 void	Server::stop(void)
 {
-	for (std::map<int, Socket>::iterator it = _clientSockets.begin();
+    if (_stopped)
+        return;
+    _stopped = true;
+
+    for (std::map<int, Socket>::iterator it = _clientSockets.begin();
 		it != _clientSockets.end(); ++it)
 	{
 		close(it->first);

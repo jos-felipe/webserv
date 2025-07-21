@@ -77,9 +77,7 @@ int	main(int argc, char **argv)
 		// Main server loop
 		while (g_running)
 			server.run();
-		
-		// Cleanup and exit
-		server.stop();
+
 		return (EXIT_SUCCESS);
 	}
 	catch (const std::exception &e)
