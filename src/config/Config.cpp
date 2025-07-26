@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:20:34 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/19 17:11:21 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/26 15:52:07 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ Config::Config(void) : _configPath("")
 /**
  * Constructor reads and parses the configuration file
  */
-Config::Config(const std::string& configPath, Logger logger) : _configPath(configPath), _logger(logger)
+Config::Config(const std::string& configPath, Logger& logger) : _configPath(configPath), _logger(logger)
 {
 	parseConfig();
 	validateConfig();
@@ -325,14 +325,22 @@ const ServerConfig* Config::findServer(const std::string& host, int port,
 	std::ostringstream oss1;
 	oss1 << "DEBUG: Finding server for host='" << host 
 	<< "', port=" << port << ", name='" << serverName << "'" << std::endl;
+<<<<<<< Updated upstream
 	_logger.log(LOG_DEBUG, oss1.str());
+=======
+	_logger.debug(oss1.str());
+>>>>>>> Stashed changes
 
 	const ServerConfig* defaultServer = NULL;
 
 	// Log all available servers for debugging
 	std::ostringstream oss2;
 	oss2 << "DEBUG: Total servers in config: " << _servers.size() << std::endl;
+<<<<<<< Updated upstream
 	_logger.log(LOG_DEBUG, oss2.str());
+=======
+	_logger.debug(oss2.str());
+>>>>>>> Stashed changes
 
 	for (size_t i = 0; i < _servers.size(); i++)
 	{
@@ -341,7 +349,11 @@ const ServerConfig* Config::findServer(const std::string& host, int port,
 	std::ostringstream oss3;
 	oss3 << "DEBUG: Checking server #" << i << ": host='" << server.host 
 	<< "', port=" << server.port;
+<<<<<<< Updated upstream
 	_logger.log(LOG_DEBUG, oss3.str());
+=======
+	_logger.debug(oss3.str());
+>>>>>>> Stashed changes
 
 	if (!server.serverNames.empty()) {
 	std::cout << ", names=[";
@@ -361,7 +373,11 @@ const ServerConfig* Config::findServer(const std::string& host, int port,
 	{
 		std::ostringstream oss4;
 		oss4 << "DEBUG: Found matching host/port" << std::endl;
+<<<<<<< Updated upstream
 		_logger.log(LOG_DEBUG, oss4.str());
+=======
+		_logger.debug(oss4.str());
+>>>>>>> Stashed changes
 
 	// Check if server name matches
 	if (server.serverNames.empty())
@@ -369,7 +385,11 @@ const ServerConfig* Config::findServer(const std::string& host, int port,
 		std::ostringstream oss5;
 			oss5 << "DEBUG: Server has no server_names, using as default" 
 		<< std::endl;
+<<<<<<< Updated upstream
 		_logger.log(LOG_DEBUG, oss5.str());
+=======
+		_logger.debug(oss5.str());
+>>>>>>> Stashed changes
 	if (!defaultServer)
 	defaultServer = &server;
 	}
@@ -381,13 +401,21 @@ const ServerConfig* Config::findServer(const std::string& host, int port,
 			oss6 << "DEBUG: Comparing server_name '" 
 		<< server.serverNames[j] << "' with '" 
 		<< serverName << "'" << std::endl;
+<<<<<<< Updated upstream
 		_logger.log(LOG_DEBUG, oss6.str());
+=======
+		_logger.debug(oss6.str());
+>>>>>>> Stashed changes
 
 	if (server.serverNames[j] == serverName)
 	{
 		std::ostringstream oss7;
 			oss7 << "DEBUG: Server name matches!" << std::endl;
+<<<<<<< Updated upstream
 			_logger.log(LOG_DEBUG, oss7.str());
+=======
+			_logger.debug(oss7.str());
+>>>>>>> Stashed changes
 		return &server;
 	}
 	}
@@ -399,7 +427,11 @@ const ServerConfig* Config::findServer(const std::string& host, int port,
 			oss8 << "DEBUG: No matching server_name, " 
 		<< "but using as potential default" << std::endl;
 		defaultServer = &server;
+<<<<<<< Updated upstream
 		_logger.log(LOG_DEBUG, oss8.str());
+=======
+		_logger.debug(oss8.str());
+>>>>>>> Stashed changes
 	}
 	}
 	}
@@ -408,12 +440,20 @@ const ServerConfig* Config::findServer(const std::string& host, int port,
 	if (defaultServer){
 		std::ostringstream oss9;
 		oss9 << "DEBUG: Returning default server for this host/port" << std::endl;
+<<<<<<< Updated upstream
 		_logger.log(LOG_DEBUG, oss9.str());
+=======
+		_logger.debug(oss9.str());
+>>>>>>> Stashed changes
 	}
 	else{
 		std::ostringstream oss10;
 		oss10 << "DEBUG: No matching server found!" << std::endl;
+<<<<<<< Updated upstream
 		_logger.log(LOG_DEBUG, oss10.str());
+=======
+		_logger.debug(oss10.str());
+>>>>>>> Stashed changes
 	}
 
 	return defaultServer;

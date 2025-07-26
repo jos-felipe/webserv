@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/05 14:17:10 by asanni            #+#    #+#             */
-/*   Updated: 2025/07/26 15:21:32 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/26 15:51:22 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,11 +45,10 @@ public:
 
 	void log(LogLevel level, const std::string& message) const;
 
-	void debug(const std::string& message) const;
-	void info(const std::string& message) const;
-	void warning(const std::string& message) const;
+	// Métodos convenientes por nível:
 	void error(const std::string& message) const;
-	void critical(const std::string& message) const;
+	void info(const std::string& message) const;
+	void debug(const std::string& message) const;
 };
 
 #endif

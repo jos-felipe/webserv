@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/30 17:23:07 by asanni            #+#    #+#             */
-/*   Updated: 2025/07/19 17:17:24 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/26 15:52:00 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 #include <iostream>
 #include <cctype>
 
-Logger::Logger(void) : _level(LOG_LEVEL) {}
+Logger::Logger(void) : _level(LOG_INFO) {}
 
 Logger::Logger(const Logger& other) : _level(other._level) {}
 
@@ -81,5 +81,19 @@ std::string Logger::toLower(std::string level) {
 	for (std::string::size_type i = 0; i < level.length(); ++i) {
 		level[i] = std::tolower(level[i]);
 	}
-	return level;
+}
+
+void Logger::error(const std::string& message) const {
+	if (_level >= LOG_ERROR)
+		log(LOG_ERROR, message);
+}
+
+void Logger::info(const std::string& message) const {
+	if (_level >= LOG_INFO)
+		log(LOG_INFO, message);
+}
+
+void Logger::debug(const std::string& message) const {
+	if (_level >= LOG_DEBUG)
+		log(LOG_DEBUG, message);
 }
