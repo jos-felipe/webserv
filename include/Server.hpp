@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:45:21 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/26 15:51:15 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/26 17:35:40 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,6 @@ class Server
 {
 private:
 	const Config*				_config;  // Changed to pointer to allow default constructor
-	Logger*						_logger; 
 	std::vector<Socket>			_listenSockets;
 	std::map<int, Socket>		_clientSockets;
 	std::map<int, HttpRequest>	_requests;
@@ -43,7 +42,8 @@ private:
 	fd_set						_readFds;
 	fd_set						_writeFds;
 	fd_set						_errorFds;
-	int								_maxFd;
+	int							_maxFd;
+	Logger						_logger; 
 	
 	/**
 	 * Initialize listening sockets based on configuration
@@ -82,9 +82,9 @@ public:
 	Server(void);
 	
 	/**
-	 * Constructor with configuration and logger
+	 * Constructor with configuration
 	 */
-	Server(const Config& config, Logger& logger);
+	Server(const Config& config);
 	
 	/**
 	 * Destructor

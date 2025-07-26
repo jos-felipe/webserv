@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 14:10:31 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/19 16:05:13 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/26 16:50:17 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,11 +60,6 @@ public:
 	 
 	HttpResponse(void);
 
-	/**
-	 * Constructor with logger
-	 */
-	HttpResponse(Logger logger);
-	
 	/**
 	 * Copy constructor
 	 */

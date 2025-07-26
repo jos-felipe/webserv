@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:35:21 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/26 15:57:48 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/26 17:12:26 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,7 @@ private:
 	size_t								_contentLength;
 	size_t								_chunkSize;
 	bool								_chunked;
-	Logger*								_logger;
+	Logger								_logger;
 	
 	/**
 	 * Parse the request line (GET /path HTTP/1.1)
@@ -149,11 +149,6 @@ public:
 	 * Default constructor
 	 */
 	HttpRequest(void);
-
-	/**
-	 * Constructor with Logger
-	 */
-	HttpRequest(Logger& logger);
 	
 	/**
 	 * Copy constructor

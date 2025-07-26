@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 14:20:15 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/19 17:39:37 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/26 16:50:35 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,12 +16,6 @@
 #include <iostream>
 #include <cstring>
 #include <cerrno>
-
-
-HttpResponse::HttpResponse(Logger logger)
-	: _statusCode(200), _statusText("OK"), _bytesSent(0), _keepAlive(true), _logger(logger)
-{
-}
 
 /**
  * Constructor initializes a default response

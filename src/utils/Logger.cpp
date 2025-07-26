@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/30 17:23:07 by asanni            #+#    #+#             */
-/*   Updated: 2025/07/26 15:52:00 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/26 17:50:08 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,8 @@
 #include <iostream>
 #include <cctype>
 
-Logger::Logger(void) : _level(LOG_INFO) {}
+Logger::Logger(void) : _level(LOG_LEVEL) {}
+
 
 Logger::Logger(const Logger& other) : _level(other._level) {}
 
@@ -38,23 +39,15 @@ void Logger::setLevel(std::string level) {
 		_level = LOG_INFO;
 	else if(level == "debug")
 		_level = LOG_DEBUG;
+	else {
+		std::cerr << "[Logger] Nível inválido: \"" << level
+		          << "\". Usando padrão: INFO." << std::endl;
+		_level = LOG_INFO;
+	}
 }
 
 LogLevel Logger::getLevel(void) const {
 	return _level;
-}
-
-void Logger::log(LogLevel level, const std::string& message) const {
-	if (level < _level)
-		return;
-
-	switch (level) {
-		case LOG_CRITICAL: critical(message); break;
-		case LOG_ERROR:    error(message);    break;
-		case LOG_WARNING:  warning(message);  break;
-		case LOG_INFO:     info(message);     break;
-		case LOG_DEBUG:    debug(message);    break;
-	}
 }
 
 void Logger::critical(const std::string& message) const {
@@ -77,23 +70,22 @@ void Logger::debug(const std::string& message) const {
 	std::cout << "[DEBUG] " << message << std::endl;
 }
 
+void Logger::log(LogLevel level, const std::string& message) const {
+	//std::cerr << "[LOG DEBUG] _level: " << _level << ", mensagem: " << level << std::endl;
+	if (level < _level)
+		return;
+	switch (level) {
+		case LOG_CRITICAL: critical(message); break;
+		case LOG_ERROR:    error(message);    break;
+		case LOG_WARNING:  warning(message);  break;
+		case LOG_INFO:     info(message);     break;
+		case LOG_DEBUG:    debug(message);    break;
+	}
+}
+
 std::string Logger::toLower(std::string level) {
 	for (std::string::size_type i = 0; i < level.length(); ++i) {
 		level[i] = std::tolower(level[i]);
 	}
-}
-
-void Logger::error(const std::string& message) const {
-	if (_level >= LOG_ERROR)
-		log(LOG_ERROR, message);
-}
-
-void Logger::info(const std::string& message) const {
-	if (_level >= LOG_INFO)
-		log(LOG_INFO, message);
-}
-
-void Logger::debug(const std::string& message) const {
-	if (_level >= LOG_DEBUG)
-		log(LOG_DEBUG, message);
+	return level;
 }

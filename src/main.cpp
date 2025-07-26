@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:29:42 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/26 15:50:34 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/26 17:47:20 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,27 +66,26 @@ int main(int argc, char **argv)
 
 	try {
 		Logger logger;                     // ✅ Logger local
-		logger.setLevel(LOG_INFO);        // ou LOG_DEBUG, dependendo do que quer ver
+		logger.setLevel("info");        // ou LOG_DEBUG, dependendo do que quer ver
 
-		Config config(configPath, logger);
+		Config config(configPath);
 		setupSignals();
 
-		Server server(config, logger);    // ✅ Injetando logger local
+		Server server(config);    // ✅ Injetando logger local
 
-		logger.info("Starting server...");
+		logger.log(LOG_INFO, "Starting server...");
 		server.start();
 
 		while (g_running)
 			server.run();
 
 		server.stop();
-		logger.info("Server stopped.");
+		logger.log(LOG_INFO, "Server stopped.");
 
 		return EXIT_SUCCESS;
 	}
 	catch (const std::exception &e) {
 		Logger logger;                    // ✅ Logger local em caso de erro
-		logger.setLevel(LOG_ERROR);
 		logger.error(std::string("Error: ") + e.what());
 		return EXIT_FAILURE;
 	}
