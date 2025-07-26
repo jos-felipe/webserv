@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:29:42 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/26 17:47:20 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/26 17:58:06 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,7 @@ int main(int argc, char **argv)
 
 	try {
 		Logger logger;                     // ✅ Logger local
-		logger.setLevel("info");        // ou LOG_DEBUG, dependendo do que quer ver
+		
 
 		Config config(configPath);
 		setupSignals();

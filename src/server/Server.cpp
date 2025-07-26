@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/26 17:45:14 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/26 17:54:24 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,7 +129,7 @@ void Server::acceptConnections(fd_set *readFdsReady)
             std::ostringstream oss;
 			oss << "Listen socket " << listenFd 
                 << " is ready for accepting" << std::endl;
-                _logger.log(LOG_ERROR, oss.str());
+                _logger.log(LOG_DEBUG, oss.str());
                 
             try
             {
