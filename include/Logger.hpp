@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/05 14:17:10 by asanni            #+#    #+#             */
-/*   Updated: 2025/07/19 17:29:16 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/26 15:21:32 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,6 @@
 
 # include <iostream>
 # include <string>
-
-
 
 
 enum LogLevel {

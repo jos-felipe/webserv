@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:29:42 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/19 17:11:55 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/26 15:11:20 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,7 +70,7 @@ int main(int argc, char **argv)
 		Config config(configPath, logger);
 		setupSignals();
 
-		Server server(config, logger);    // ✅ Injetando logger local
+		Server server(config);    // ✅ Injetando logger local
 
 		logger.log(LOG_INFO, "Starting server...");
 		server.start();

@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/19 17:28:07 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/26 15:11:05 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ Server::Server(void) : _config(NULL), _maxFd(-1)
 /**
  * Constructor initializes server with provided configuration
  */
-Server::Server(const Config& config, Logger logger) : _config(&config), _logger(logger), _maxFd(-1)
+Server::Server(const Config& config) : _config(&config), _maxFd(-1)
 {
 	FD_ZERO(&_readFds);
 	FD_ZERO(&_writeFds);
