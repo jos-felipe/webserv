@@ -3,18 +3,19 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:29:42 by josfelip          #+#    #+#             */
-/*   Updated: 2025/03/26 12:42:52 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/07/26 17:58:06 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <iostream>
 #include <cstdlib>
 #include <csignal>
-#include "../include/Server.hpp"
-#include "../include/Config.hpp"
+#include "Logger.hpp"
+#include "Config.hpp"
+#include "Server.hpp"
 
 bool	g_running = true;
 
@@ -49,42 +50,43 @@ void	displayUsage(const char *programName)
 /**
  * Main function - entry point for the webserver
  */
-int	main(int argc, char **argv)
+#include "Logger.hpp"
+#include "Config.hpp"
+#include "Server.hpp"
+
+int main(int argc, char **argv)
 {
 	std::string configPath = "./conf/default.conf";
 
-	// Check if a configuration file was provided
-	if (argc > 2)
-	{
+	if (argc > 2) {
 		displayUsage(argv[0]);
-		return (EXIT_FAILURE);
-	}
-	else if (argc == 2)
+		return EXIT_FAILURE;
+	} else if (argc == 2)
 		configPath = argv[1];
 
-	try
-	{
-		// Parse configuration file
+	try {
+		Logger logger;                     // ✅ Logger local
+		
+
 		Config config(configPath);
-		
-		// Setup signal handlers
 		setupSignals();
-		
-		// Create and start the server
-		Server server(config);
+
+		Server server(config);    // ✅ Injetando logger local
+
+		logger.log(LOG_INFO, "Starting server...");
 		server.start();
-		
-		// Main server loop
+
 		while (g_running)
 			server.run();
-		
-		// Cleanup and exit
+
 		server.stop();
-		return (EXIT_SUCCESS);
+		logger.log(LOG_INFO, "Server stopped.");
+
+		return EXIT_SUCCESS;
 	}
-	catch (const std::exception &e)
-	{
-		std::cerr << "Error: " << e.what() << std::endl;
-		return (EXIT_FAILURE);
+	catch (const std::exception &e) {
+		Logger logger;                    // ✅ Logger local em caso de erro
+		logger.error(std::string("Error: ") + e.what());
+		return EXIT_FAILURE;
 	}
 }
