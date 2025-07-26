@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:35:21 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/26 15:55:02 by asanni           ###   ########.fr       */
+/*   Updated: 2025/07/26 15:57:48 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@
 # include "CgiHandler.hpp"
 
 /**
- * @enum ParseState
+ * @4enum ParseState
  * @brief States for HTTP request parsing
  */
 enum ParseState
