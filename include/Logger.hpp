@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/05 14:17:10 by asanni            #+#    #+#             */
-/*   Updated: 2025/07/31 11:40:33 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/07/31 12:01:13 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,8 +40,8 @@ public:
 	Logger& operator=(const Logger& other);
 	~Logger();
 
-	void setLevel(LogLevel level);
-	LogLevel getLevel() const;
+	void setFilterLevel(LogLevel level);
+	LogLevel getFilterLevel() const;
 
 	void log(LogLevel level, const std::string& message) const;
 	void debug(const std::string& message) const;
