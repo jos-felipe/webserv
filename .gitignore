@@ -37,6 +37,7 @@ debugme
 .vscode/
 *.swp
 tags
+bootstrap.sh
 
 # 42 Intelectual Property
 *subject*
