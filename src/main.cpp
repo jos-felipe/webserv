@@ -6,15 +6,16 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:29:42 by josfelip          #+#    #+#             */
-/*   Updated: 2025/07/31 13:00:37 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/08/04 13:24:54 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <iostream>
 #include <cstdlib>
 #include <csignal>
-#include "../include/Server.hpp"
-#include "../include/Config.hpp"
+#include "Server.hpp"
+#include "Config.hpp"
+#include "Logger.hpp"
 
 bool	g_running = true;
 
@@ -62,6 +63,7 @@ int	main(int argc, char **argv)
 	else if (argc == 2)
 		configPath = argv[1];
 
+	Logger logger;
 	try
 	{
 		// Parse configuration file
@@ -82,7 +84,8 @@ int	main(int argc, char **argv)
 	}
 	catch (const std::exception &e)
 	{
-		std::cerr << "Error: " << e.what() << std::endl;
+		logger.tempOss << e.what();
+		logger.error();
 		return (EXIT_FAILURE);
 	}
 }
