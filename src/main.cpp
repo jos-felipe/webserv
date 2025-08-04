@@ -6,7 +6,7 @@
 /*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:29:42 by josfelip          #+#    #+#             */
-/*   Updated: 2025/03/26 12:42:52 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/07/31 13:00:37 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,8 +78,6 @@ int	main(int argc, char **argv)
 		while (g_running)
 			server.run();
 		
-		// Cleanup and exit
-		server.stop();
 		return (EXIT_SUCCESS);
 	}
 	catch (const std::exception &e)
