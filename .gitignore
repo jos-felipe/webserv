@@ -38,6 +38,7 @@ debugme
 *.swp
 tags
 bootstrap.sh
+.vimrc
 
 # 42 Intelectual Property
 *subject*
@@ -45,3 +46,5 @@ bootstrap.sh
 # Uploaded files
 www/uploads/*
 
+# Log files
+*.log
