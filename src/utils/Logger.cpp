@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/30 17:23:07 by asanni            #+#    #+#             */
-/*   Updated: 2025/07/31 12:39:16 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/08/04 13:22:12 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,4 +50,26 @@ void Logger::log(LogLevel level, const std::string& message) const {
 		else if (level == LOG_CRITICAL)
 			std::cerr << "[CRITICAL] " << message << std::endl;
 	}
+	tempOss.str("");
+	tempOss.clear();
+}
+
+void Logger::debug() const {
+	log(LOG_DEBUG, tempOss.str());
+}
+
+void Logger::info() const {
+	log(LOG_INFO, tempOss.str());
+}
+
+void Logger::warning() const {
+	log(LOG_WARNING, tempOss.str());
+}
+
+void Logger::error() const {
+	log(LOG_ERROR, tempOss.str());
+}
+
+void Logger::critical() const {
+	log(LOG_CRITICAL, tempOss.str());
 }

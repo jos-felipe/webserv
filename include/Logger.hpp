@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/05 14:17:10 by asanni            #+#    #+#             */
-/*   Updated: 2025/07/31 12:01:13 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/08/04 13:18:50 by josfelip         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 
 # include <iostream>
 # include <string>
-
+# include <sstream>
 
 enum LogLevel {
 	LOG_DEBUG,
@@ -44,11 +44,14 @@ public:
 	LogLevel getFilterLevel() const;
 
 	void log(LogLevel level, const std::string& message) const;
-	void debug(const std::string& message) const;
-	void info(const std::string& message) const;
-	void warning(const std::string& message) const;
-	void error(const std::string& message) const;
-	void critical(const std::string& message) const;
+	void debug() const;
+	void info() const;
+	void warning() const;
+	void error() const;
+	void critical() const;
+
+	// Temporary variable for building the log message
+	mutable std::ostringstream tempOss;
 };
 
 #endif
