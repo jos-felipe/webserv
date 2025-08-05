@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42sp.org.br>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:55:47 by josfelip          #+#    #+#             */
-/*   Updated: 2025/06/10 12:46:24 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/08/05 18:42:19 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,13 +93,15 @@ void	Server::initializeSockets(void)
 			if (fd > _maxFd)
 				_maxFd = fd;
 				
-			std::cout << "Server listening on " << it->host << ":" 
+			_logger.tempOss << "Server listening on " << it->host << ":" 
 				<< it->port << std::endl;
+                _logger.info();
 		}
 		catch (const std::exception& e)
 		{
-			std::cerr << "Failed to initialize socket on " << it->host 
+			_logger.tempOss << "Failed to initialize socket on " << it->host 
 				<< ":" << it->port << " - " << e.what() << std::endl;
+            _logger.error();
 		}
 	}
 	
@@ -119,8 +121,9 @@ void Server::acceptConnections(fd_set *readFdsReady)
         
         if (FD_ISSET(listenFd, readFdsReady))
         {
-            std::cout << "DEBUG: Listen socket " << listenFd 
+            _logger.tempOss << "Listen socket " << listenFd 
                 << " is ready for accepting" << std::endl;
+                _logger.debug();
                 
             try
             {
@@ -138,13 +141,15 @@ void Server::acceptConnections(fd_set *readFdsReady)
                     if (clientFd > _maxFd)
                         _maxFd = clientFd;
                         
-                    std::cout << "New connection accepted: fd " << clientFd << std::endl;
+                    _logger.tempOss << "New connection accepted: fd " << clientFd << std::endl;
+                    _logger.info();
                 }
             }
             catch (const std::exception& e)
             {
-                std::cerr << "Failed to accept connection: " 
+                _logger.tempOss << "Failed to accept connection: " 
                     << e.what() << std::endl;
+                    _logger.error();
             }
         }
     }
@@ -167,50 +172,57 @@ void	Server::handleRequests(fd_set *readFdsReady)
 		
 		if (FD_ISSET(clientFd, readFdsReady))
 		{
-		    std::cout << "DEBUG: Client socket " << clientFd 
+		    _logger.tempOss << "Client socket " << clientFd 
                 << " is ready for reading" << std::endl;
+                _logger.debug();
                 
 			try
 			{
 				if (!_requests.count(clientFd))
 				{
-				    std::cout << "DEBUG: Creating new request for fd " 
+				    _logger.tempOss << "Creating new request for fd " 
                         << clientFd << std::endl;
+                        _logger.debug();
 					_requests[clientFd] = HttpRequest();
 				}
 					
 				HttpRequest& request = _requests[clientFd];
 				
 				bool requestComplete = request.read(it->second);
-				std::cout << "DEBUG: Request read returned: " 
+				_logger.tempOss << "Request read returned: " 
                     << (requestComplete ? "COMPLETE" : "INCOMPLETE") << std::endl;
+                    _logger.debug();
 				
 				if (requestComplete)
 				{
 					// Request is complete, process it
-					std::cout << "DEBUG: Processing request and generating response" 
+					_logger.tempOss << "Processing request and generating response" 
                         << std::endl;
+                        _logger.debug();
 					HttpResponse response = request.process(*_config);
 					_responses[clientFd] = response;
 					
 					// Switch to writing mode
-					std::cout << "DEBUG: Switching socket " << clientFd 
+					_logger.tempOss << "Switching socket " << clientFd 
                         << " to write mode" << std::endl;
+                        _logger.debug();
 					FD_CLR(clientFd, &_readFds);
 					FD_SET(clientFd, &_writeFds);
 				}
 				else
 				{
 					// Connection was closed or error occurred
-					std::cout << "DEBUG: Connection closed or error on fd " << clientFd 
+					_logger.tempOss << "Connection closed or error on fd " << clientFd 
 						<< ", marking for removal" << std::endl;
+                        _logger.debug();
 					toRemove.push_back(clientFd);
 				}
 			}
 			catch (const std::exception& e)
 			{
-				std::cerr << "Error handling request on fd " << clientFd 
+				_logger.tempOss << "Error handling request on fd " << clientFd 
 					<< ": " << e.what() << std::endl;
+                    _logger.error();
 				toRemove.push_back(clientFd);
 			}
 		}
@@ -235,7 +247,8 @@ void	Server::handleRequests(fd_set *readFdsReady)
  */
 void Server::sendResponses(fd_set *writeFdsReady)
 {
-    std::cout << "DEBUG: Checking for sockets ready to write" << std::endl;
+    _logger.tempOss << "Checking for sockets ready to write" << std::endl;
+    _logger.debug();
     
     std::vector<int> toRemove;
     std::vector<int> toKeepAlive;  // New vector to track connections to keep alive
@@ -247,14 +260,16 @@ void Server::sendResponses(fd_set *writeFdsReady)
         
         // Validate file descriptor before using it
         if (clientFd < 0 || clientFd >= FD_SETSIZE) {
-            std::cerr << "Error: Invalid file descriptor " << clientFd << std::endl;
+            _logger.tempOss << "Error: Invalid file descriptor " << clientFd << std::endl;
+            _logger.error();
             toRemove.push_back(clientFd);
             continue;
         }
         
-        std::cout << "DEBUG: Checking if socket " << clientFd 
+        _logger.tempOss << "Checking if socket " << clientFd 
             << " is ready for writing: " 
             << (FD_ISSET(clientFd, writeFdsReady) ? "YES" : "NO") << std::endl;
+            _logger.debug();
             
         if (FD_ISSET(clientFd, writeFdsReady))
         {
@@ -264,44 +279,51 @@ void Server::sendResponses(fd_set *writeFdsReady)
                 
                 // Check if client socket exists before accessing it
                 if (_clientSockets.find(clientFd) == _clientSockets.end()) {
-                    std::cerr << "Error: Client socket not found for fd " 
+                    _logger.tempOss << "Error: Client socket not found for fd " 
                         << clientFd << std::endl;
+                        _logger.error();
                     toRemove.push_back(clientFd);
                     continue;
                 }
                 
-                std::cout << "DEBUG: Attempting to send response on fd " 
+                _logger.tempOss << "Attempting to send response on fd " 
                     << clientFd << std::endl;
+                    _logger.debug();
                     
                 if (response.send(_clientSockets[clientFd]))
                 {
                     // Response fully sent, either keep-alive or close
-                    std::cout << "DEBUG: Response fully sent on fd " 
+                    _logger.tempOss << "Response fully sent on fd " 
                         << clientFd << std::endl;
+                        _logger.debug();
                         
                     if (response.shouldKeepAlive())
                     {
                         // Mark for keep-alive processing AFTER we finish iterating
-                        std::cout << "DEBUG: Marking connection for keep-alive: " 
+                        _logger.tempOss << "Marking connection for keep-alive: " 
                             << clientFd << std::endl;
+                            _logger.debug();
                         toKeepAlive.push_back(clientFd);
                     }
                     else
                     {
-                        std::cout << "DEBUG: Connection will be closed" << std::endl;
+                        _logger.tempOss << "Connection will be closed" << std::endl;
+                        _logger.debug();
                         toRemove.push_back(clientFd);
                     }
                 }
                 else
                 {
-                    std::cout << "DEBUG: Response not fully sent yet, "
+                    _logger.tempOss << "Response not fully sent yet, "
                         << "will try again later" << std::endl;
+                        _logger.debug();
                 }
             }
             catch (const std::exception& e)
             {
-                std::cerr << "Error sending response on fd " << clientFd 
+                _logger.tempOss << "Error sending response on fd " << clientFd 
                     << ": " << e.what() << std::endl;
+                    _logger.error();
                 toRemove.push_back(clientFd);
             }
         }
@@ -312,8 +334,9 @@ void Server::sendResponses(fd_set *writeFdsReady)
          it != toKeepAlive.end(); ++it)
     {
         int clientFd = *it;
-        std::cout << "DEBUG: Keeping connection alive, "
+        _logger.tempOss << "Keeping connection alive, "
             << "switching " << clientFd << " back to read mode" << std::endl;
+            _logger.debug();
         
         // Reset for new request
         _requests.erase(clientFd);
@@ -327,7 +350,8 @@ void Server::sendResponses(fd_set *writeFdsReady)
         it != toRemove.end(); ++it)
     {
         int clientFd = *it;
-        std::cout << "DEBUG: Closing connection: " << clientFd << std::endl;
+        _logger.tempOss << "Closing connection: " << clientFd << std::endl;
+        _logger.debug();
         
         FD_CLR(clientFd, &_readFds);
         FD_CLR(clientFd, &_writeFds);
@@ -335,7 +359,8 @@ void Server::sendResponses(fd_set *writeFdsReady)
         _requests.erase(clientFd);
         _responses.erase(clientFd);
         close(clientFd);
-        std::cout << "Connection closed: fd " << clientFd << std::endl;
+        _logger.tempOss << "Connection closed: fd " << clientFd << std::endl;
+        _logger.info();
     }
 }
 /**
@@ -344,7 +369,8 @@ void Server::sendResponses(fd_set *writeFdsReady)
 void	Server::start(void)
 {
 	initializeSockets();
-	std::cout << "Server started successfully" << std::endl;
+	_logger.tempOss << "Server started successfully" << std::endl;
+    _logger.info();
 }
 
 /**
@@ -366,21 +392,23 @@ void	Server::run(void)
     int actualFdCount = 0;
     for (int i = 0; i <= _maxFd; i++) {
         if (FD_ISSET(i, &_readFds) || FD_ISSET(i, &_writeFds)) {
-            std::cout << "DEBUG: Monitoring fd " << i;
+            _logger.tempOss << "Monitoring fd " << i;
             if (FD_ISSET(i, &_readFds) && FD_ISSET(i, &_writeFds)) {
-                std::cout << " (read+write)";
+                _logger.tempOss << " (read+write)";
             } else if (FD_ISSET(i, &_readFds)) {
-                std::cout << " (read)";
+                _logger.tempOss << " (read)";
             } else {
-                std::cout << " (write)";
+                _logger.tempOss << " (write)";
             }
-            std::cout << std::endl;
+            _logger.tempOss << std::endl;
+            _logger.debug();
             actualFdCount++;
         }
     }
-    std::cout << "DEBUG: select() checking range 0-" << _maxFd 
+    _logger.tempOss << "select() checking range 0-" << _maxFd 
         << " (" << _maxFd + 1 << " total), actually monitoring " 
         << actualFdCount << " file descriptors" << std::endl;
+        _logger.debug();
     
     int activity = select(_maxFd + 1, &readFdsCopy, &writeFdsCopy, 
         &errorFdsCopy, NULL);
@@ -388,7 +416,10 @@ void	Server::run(void)
     if (activity < 0)
     {
         if (errno != EINTR) // Ignore if interrupted by signal
-            std::cerr << "Select error: " << strerror(errno) << std::endl;
+        {
+            _logger.tempOss << "Select error: " << strerror(errno) << std::endl;
+            _logger.error();
+        }
         return;
     }
     else if (activity == 0) 
@@ -397,8 +428,9 @@ void	Server::run(void)
         return;
     }
     
-    std::cout << "DEBUG: select() returned " << activity 
+    _logger.tempOss << "select() returned " << activity 
         << " ready file descriptors" << std::endl;
+        _logger.debug();
       
     // Process I/O events
     acceptConnections(&readFdsCopy);
@@ -428,5 +460,6 @@ void	Server::stop(void)
 	_requests.clear();
 	_responses.clear();
 	
-	std::cout << "Server stopped" << std::endl;
+	_logger.tempOss << "Server stopped" << std::endl;
+    _logger.info();
 }
