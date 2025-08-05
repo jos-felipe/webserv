@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42sp.org.br>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:20:34 by josfelip          #+#    #+#             */
-/*   Updated: 2025/08/05 18:23:27 by asanni           ###   ########.fr       */
+/*   Updated: 2025/08/05 18:54:35 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -398,7 +398,7 @@ const ServerConfig* Config::findServer(const std::string& host, int port,
 
 	if (defaultServer){
 		_logger.tempOss << "Returning default server for this host/port" << std::endl;
-		
+		_logger.debug();
 	}
 
 	else{
@@ -453,7 +453,7 @@ std::string Config::getDefaultErrorPage(int statusCode) const
             ss << file.rdbuf();
             return ss.str();
         }
-        _logger.tempOss << "WARNING: não foi possível abrir página de erro '"
+        _logger.tempOss << "não foi possível abrir página de erro '"
                   << fullPath  << ")\n";
 									_logger.warning();
         
