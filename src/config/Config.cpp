@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42sp.org.br>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:20:34 by josfelip          #+#    #+#             */
-/*   Updated: 2025/08/05 18:54:35 by asanni           ###   ########.fr       */
+/*   Updated: 2025/08/06 19:27:56 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -322,13 +322,13 @@ const ServerConfig* Config::findServer(const std::string& host, int port,
 	const std::string& serverName) const
 {
 	_logger.tempOss << "Finding server for host='" << host 
-	<< "', port=" << port << ", name='" << serverName << "'" << std::endl;
+	<< "', port=" << port << ", name='" << serverName << "'";
 	_logger.debug();
 
 	const ServerConfig* defaultServer = NULL;
 
 	// Log all available servers for debugging
-	_logger.tempOss << "Total servers in config: " << _servers.size() << std::endl;
+	_logger.tempOss << "Total servers in config: " << _servers.size();
 
 	for (size_t i = 0; i < _servers.size(); i++)
 	{
@@ -346,7 +346,6 @@ const ServerConfig* Config::findServer(const std::string& host, int port,
 	}
 	_logger.tempOss << "]";
 	}
-	_logger.tempOss << std::endl;
 	_logger.info();
 
 	// Check for matching host & port
@@ -355,14 +354,13 @@ const ServerConfig* Config::findServer(const std::string& host, int port,
 
 	if (hostMatches && portMatches)
 	{
-		_logger.tempOss << "Found matching host/port" << std::endl;
+		_logger.tempOss << "Found matching host/port";
 		_logger.debug();
 
 	// Check if server name matches
 	if (server.serverNames.empty())
 	{
-		_logger.tempOss << "Server has no server_names, using as default" 
-		<< std::endl;
+		_logger.tempOss << "Server has no server_names, using as default";
 		_logger.debug();
 	if (!defaultServer)
 	defaultServer = &server;
@@ -373,12 +371,12 @@ const ServerConfig* Config::findServer(const std::string& host, int port,
 	{
 		_logger.tempOss << "Comparing server_name '" 
 		<< server.serverNames[j] << "' with '" 
-		<< serverName << "'" << std::endl;
+		<< serverName << "'";
 		_logger.debug();
 
 	if (server.serverNames[j] == serverName)
 	{
-		_logger.tempOss << "Server name matches!" << std::endl;
+		_logger.tempOss << "Server name matches!";
 		_logger.debug();
 		return &server;
 	}
@@ -388,7 +386,7 @@ const ServerConfig* Config::findServer(const std::string& host, int port,
 	if (!defaultServer)
 	{
 		_logger.tempOss << "No matching server_name, " 
-		<< "but using as potential default" << std::endl;
+		<< "but using as potential default";
 		_logger.debug();
 	defaultServer = &server;
 	}
@@ -397,12 +395,12 @@ const ServerConfig* Config::findServer(const std::string& host, int port,
 	}
 
 	if (defaultServer){
-		_logger.tempOss << "Returning default server for this host/port" << std::endl;
+		_logger.tempOss << "Returning default server for this host/port";
 		_logger.debug();
 	}
 
 	else{
-		_logger.tempOss << "No matching server found!" << std::endl;
+		_logger.tempOss << "No matching server found!";
 		_logger.debug();
 	}
 	
@@ -453,7 +451,7 @@ std::string Config::getDefaultErrorPage(int statusCode) const
             ss << file.rdbuf();
             return ss.str();
         }
-        _logger.tempOss << "não foi possível abrir página de erro '"
+        _logger.tempOss << "could not open error page'"
                   << fullPath  << ")\n";
 									_logger.warning();
         
