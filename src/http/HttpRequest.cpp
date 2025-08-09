@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42sp.org.br>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:50:42 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/02 20:42:57 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/08/06 20:11:44 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -688,14 +688,8 @@ HttpResponse HttpRequest::handlePost(LocationConfig const &location,
 		std::cout << "DEBUG: Successfully uploaded " << _body.size() 
 		    << " bytes to " << uploadPath << std::endl;
 		
-		response.setStatus(201);
-		std::ostringstream sizeOss;
-		sizeOss << _body.size();
-		response.setBody("<html><body><h1>Upload Successful</h1>"
-		                "<p>File uploaded as: " + filename + "</p>"
-		                "<p>Size: " + sizeOss.str() + " bytes</p>"
-		                "</body></html>");
-		response.addHeader("Content-Type", "text/html");
+		response.setStatus(303);
+		response.addHeader("Location", "/successupload.html");
 	}
 	
 	return response;
@@ -976,9 +970,22 @@ HttpResponse HttpRequest::handleFormData(HttpResponse &response) {
 	std::cout << "DEBUG: Handling form data" << std::endl;
 	
 	response.setStatus(200);
-	response.setBody("<html><body><h1>Form Data Received</h1>"
-	                "<p>Received " + _body + "</p>"
-	                "</body></html>");
+	response.setBody(
+		"<!DOCTYPE html>"
+    "<html>"
+    "<head>"
+        "<link rel=\"stylesheet\" href=\"style.css\" />"
+    "</head>"
+    "<body>"
+        "<h1>Form Data Received!</h1>"
+        "<div class=\"success\">"
+            "<img src=\"images/suggestion-box.gif\" alt=\"printing form\" class=\"data-image\" />"
+						"<h2>"+ _body +"</h2>"
+        "</div>"
+        "<p>Go back <a href=\"index.html\">Home</a></p>"
+    "</body>"
+    "</html>"
+	);
 	response.addHeader("Content-Type", "text/html");
 	
 	return response;
