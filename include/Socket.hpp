@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 14:30:22 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/02 14:47:21 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/08/09 16:44:45 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 # include <sys/socket.h>
 # include <netinet/in.h>
 # include <arpa/inet.h>
+# include "Logger.hpp"
 
 /**
  * @class Socket
@@ -46,6 +47,7 @@ private:
 		bool				_bound;
 		bool				_listening;
 		int					_refCount;  // Reference counter
+		Logger				_logger;
 		
 	public:
 		/**
