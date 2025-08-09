@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42sp.org.br>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:10:12 by josfelip          #+#    #+#             */
-/*   Updated: 2025/03/31 23:18:57 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/08/05 18:12:45 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 # include <vector>
 # include <map>
 # include <set>
+# include "Logger.hpp"
 
 /**
  * @struct LocationConfig
@@ -65,6 +66,7 @@ class Config
 private:
 	std::string					_configPath;
 	std::vector<ServerConfig>	_servers;
+	Logger									_logger;
 	
 	/**
 	 * Parse the configuration file

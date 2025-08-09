@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42sp.org.br>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 12:45:21 by josfelip          #+#    #+#             */
-/*   Updated: 2025/06/10 12:41:42 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/08/05 18:27:37 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 # include "Socket.hpp"
 # include "HttpRequest.hpp"
 # include "HttpResponse.hpp"
+# include "Logger.hpp"
 
 /**
  * @class Server
@@ -42,6 +43,7 @@ private:
 	fd_set						_writeFds;
 	fd_set						_errorFds;
 	int							_maxFd;
+	Logger				_logger;
 	
 	/**
 	 * Initialize listening sockets based on configuration

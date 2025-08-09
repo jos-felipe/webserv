@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42sp.org.br>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:20:34 by josfelip          #+#    #+#             */
-/*   Updated: 2025/06/17 17:44:00 by asanni           ###   ########.fr       */
+/*   Updated: 2025/08/06 19:27:56 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -321,30 +321,32 @@ const std::vector<ServerConfig>&	Config::getServers(void) const
 const ServerConfig* Config::findServer(const std::string& host, int port, 
 	const std::string& serverName) const
 {
-	std::cout << "DEBUG: Finding server for host='" << host 
-	<< "', port=" << port << ", name='" << serverName << "'" << std::endl;
+	_logger.tempOss << "Finding server for host='" << host 
+	<< "', port=" << port << ", name='" << serverName << "'";
+	_logger.debug();
 
 	const ServerConfig* defaultServer = NULL;
 
 	// Log all available servers for debugging
-	std::cout << "DEBUG: Total servers in config: " << _servers.size() << std::endl;
+	_logger.tempOss << "Total servers in config: " << _servers.size();
 
 	for (size_t i = 0; i < _servers.size(); i++)
 	{
 	const ServerConfig& server = _servers[i];
 
-	std::cout << "DEBUG: Checking server #" << i << ": host='" << server.host 
+	_logger.tempOss << "Checking server #" << i << ": host='" << server.host 
 	<< "', port=" << server.port;
+	_logger.debug();
 
 	if (!server.serverNames.empty()) {
-	std::cout << ", names=[";
+	_logger.tempOss << ", names=[";
 	for (size_t j = 0; j < server.serverNames.size(); j++) {
-	if (j > 0) std::cout << ", ";
-	std::cout << "'" << server.serverNames[j] << "'";
+	if (j > 0) _logger.tempOss << ", ";
+	_logger.tempOss << "'" << server.serverNames[j] << "'";
 	}
-	std::cout << "]";
+	_logger.tempOss << "]";
 	}
-	std::cout << std::endl;
+	_logger.info();
 
 	// Check for matching host & port
 	bool hostMatches = (server.host == host || server.host == "0.0.0.0");
@@ -352,13 +354,14 @@ const ServerConfig* Config::findServer(const std::string& host, int port,
 
 	if (hostMatches && portMatches)
 	{
-	std::cout << "DEBUG: Found matching host/port" << std::endl;
+		_logger.tempOss << "Found matching host/port";
+		_logger.debug();
 
 	// Check if server name matches
 	if (server.serverNames.empty())
 	{
-	std::cout << "DEBUG: Server has no server_names, using as default" 
-	<< std::endl;
+		_logger.tempOss << "Server has no server_names, using as default";
+		_logger.debug();
 	if (!defaultServer)
 	defaultServer = &server;
 	}
@@ -366,32 +369,41 @@ const ServerConfig* Config::findServer(const std::string& host, int port,
 	{
 	for (size_t j = 0; j < server.serverNames.size(); j++)
 	{
-	std::cout << "DEBUG: Comparing server_name '" 
-	<< server.serverNames[j] << "' with '" 
-	<< serverName << "'" << std::endl;
+		_logger.tempOss << "Comparing server_name '" 
+		<< server.serverNames[j] << "' with '" 
+		<< serverName << "'";
+		_logger.debug();
 
 	if (server.serverNames[j] == serverName)
 	{
-	std::cout << "DEBUG: Server name matches!" << std::endl;
-	return &server;
+		_logger.tempOss << "Server name matches!";
+		_logger.debug();
+		return &server;
 	}
 	}
 
 	// No matching server name, but host/port match, so potential default
 	if (!defaultServer)
 	{
-	std::cout << "DEBUG: No matching server_name, " 
-	<< "but using as potential default" << std::endl;
+		_logger.tempOss << "No matching server_name, " 
+		<< "but using as potential default";
+		_logger.debug();
 	defaultServer = &server;
 	}
 	}
 	}
 	}
 
-	if (defaultServer)
-	std::cout << "DEBUG: Returning default server for this host/port" << std::endl;
-	else
-	std::cout << "DEBUG: No matching server found!" << std::endl;
+	if (defaultServer){
+		_logger.tempOss << "Returning default server for this host/port";
+		_logger.debug();
+	}
+
+	else{
+		_logger.tempOss << "No matching server found!";
+		_logger.debug();
+	}
+	
 
 	return defaultServer;
 }
@@ -439,8 +451,9 @@ std::string Config::getDefaultErrorPage(int statusCode) const
             ss << file.rdbuf();
             return ss.str();
         }
-        std::cerr << "WARNING: não foi possível abrir página de erro '"
+        _logger.tempOss << "could not open error page'"
                   << fullPath  << ")\n";
+									_logger.warning();
         
     }
     // se falhar, continua para a error page embutida
