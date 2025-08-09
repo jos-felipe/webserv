@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 14:10:31 by josfelip          #+#    #+#             */
-/*   Updated: 2025/06/10 13:28:34 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/08/09 16:05:24 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 # include <map>
 # include <vector>
 # include "Socket.hpp"
+# include "Logger.hpp"
 
 /**
  * @class HttpResponse
@@ -35,6 +36,7 @@ private:
 	std::string						_rawResponse;
 	size_t							_bytesSent;
 	bool							_keepAlive;
+	Logger							_logger;
 	
 	/**
 	 * Get the text description for a status code
