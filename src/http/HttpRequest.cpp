@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpRequest.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: asanni <asanni@student.42sp.org.br>        +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:50:42 by josfelip          #+#    #+#             */
-/*   Updated: 2025/08/06 20:11:44 by asanni           ###   ########.fr       */
+/*   Updated: 2025/08/09 16:04:55 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,17 +92,21 @@ bool	HttpRequest::read(Socket& clientSocket)
 	
 	ssize_t bytesRead = clientSocket.recv(buffer, BUFFER_SIZE);
 	
-	std::cout << "DEBUG: HttpRequest::read() received " << bytesRead 
-	    << " bytes" << std::endl;
+	_logger.tempOss << "HttpRequest::read() received " << bytesRead 
+	    << " bytes";
+		_logger.debug();
 	
 	if (bytesRead <= 0)
 	{
 	    if (bytesRead == 0)
-	        std::cout << "DEBUG: Client closed connection" << std::endl;
+		{
+			_logger.tempOss << "Client closed connection";
+			_logger.debug();
+		}
 	    else
 		{
-			std::cout << "DEBUG: Error reading from socket: "  
-			<< strerror(errno) << std::endl;			
+			_logger.tempOss << "Error reading from socket: " << strerror(errno);
+			_logger.error();
 		}
 		return false;
 	}
@@ -112,19 +116,23 @@ bool	HttpRequest::read(Socket& clientSocket)
 	
 	// Print first line of the buffer for debugging
 	size_t firstLineEnd = _buffer.find("\r\n");
-	if (firstLineEnd != std::string::npos)
-	    std::cout << "DEBUG: First line of request: " 
-	        << _buffer.substr(0, firstLineEnd) << std::endl;
+	if (firstLineEnd != std::string::npos){
+	    _logger.tempOss << "First line of request: " << _buffer.substr(0, firstLineEnd);
+		_logger.debug();
+	}
 	else
-	    std::cout << "DEBUG: Request buffer (incomplete): " 
-	        << _buffer << std::endl;
+	{
+		_logger.tempOss << "Request buffer (incomplete): " << _buffer;
+		_logger.debug();
+	}
 	
 	// Process the buffer based on current state
 	bool done = false;
 	
 	while (!done)
 	{
-	    std::cout << "DEBUG: Request parse state: " << _state << std::endl;
+	    _logger.tempOss << "Request parse state: " << _state;
+		_logger.debug();
 		switch (_state)
 		{
 			case REQUEST_LINE:
@@ -148,7 +156,8 @@ bool	HttpRequest::read(Socket& clientSocket)
 				{
 					_buffer = _buffer.substr(2);
 					_state = COMPLETE;
-					std::cout << "DEBUG: Request is COMPLETE after chunked end" << std::endl;
+					_logger.tempOss << "Request is COMPLETE after chunked end";
+					_logger.debug();
 				}
 				else
 				{
@@ -156,10 +165,12 @@ bool	HttpRequest::read(Socket& clientSocket)
 				}
 				break;
 			case COMPLETE:
-			    std::cout << "DEBUG: Request is COMPLETE" << std::endl;
+			    _logger.tempOss << "Request is COMPLETE";
+				_logger.debug();
 				return true;
 			case ERROR:
-			    std::cout << "DEBUG: Request has ERROR state" << std::endl;
+			    _logger.tempOss << "Request has ERROR state";
+				_logger.debug();
 				return true;
 			default:
 				done = true;
@@ -167,8 +178,9 @@ bool	HttpRequest::read(Socket& clientSocket)
 	}
 	
 	bool isComplete = (_state == COMPLETE || _state == ERROR);
-	std::cout << "DEBUG: Returning from read(), request is " 
-	    << (isComplete ? "COMPLETE" : "INCOMPLETE") << std::endl;
+	_logger.tempOss << "Returning from read(), request is " 
+	    << (isComplete ? "COMPLETE" : "INCOMPLETE");
+		_logger.debug();
 	
 	return isComplete;
 }
@@ -182,25 +194,29 @@ bool	HttpRequest::parseRequestLine(void)
 	
 	if (endPos == std::string::npos)
 	{
-	    std::cout << "DEBUG: Request line incomplete, waiting for more data" << std::endl;
+	    _logger.tempOss << "Request line incomplete, waiting for more data";
+		_logger.debug();
 		return false;
 	}
 		
 	std::string line = _buffer.substr(0, endPos);
 	_buffer = _buffer.substr(endPos + 2);
 	
-	std::cout << "DEBUG: Parsing request line: " << line << std::endl;
+	_logger.tempOss << "Parsing request line: " << line;
+	_logger.debug();
 	
 	std::istringstream lineStream(line);
 	if (!(lineStream >> _method >> _uri >> _httpVersion))
 	{
-	    std::cout << "DEBUG: Failed to parse request line" << std::endl;
+	    _logger.tempOss << "Failed to parse request line";
+		_logger.debug();
 		_state = ERROR;
 		return false;
 	}
 	
-	std::cout << "DEBUG: Method=" << _method << ", URI=" << _uri 
-	    << ", Version=" << _httpVersion << std::endl;
+	_logger.tempOss << "Method=" << _method << ", URI=" << _uri 
+	    << ", Version=" << _httpVersion;
+		_logger.debug();
 	
 	// Parse the URI into path and query
 	size_t queryPos = _uri.find('?');
@@ -214,7 +230,8 @@ bool	HttpRequest::parseRequestLine(void)
 		_path = _uri;
 	}
 	
-	std::cout << "DEBUG: Path=" << _path << ", Query=" << _query << std::endl;
+	_logger.tempOss << "Path=" << _path << ", Query=" << _query;
+	_logger.debug();
 	
 	_state = HEADERS;
 	return true;
@@ -231,7 +248,8 @@ bool	HttpRequest::parseHeaders(void)
 		
 		if (endPos == std::string::npos)
 		{
-		    std::cout << "DEBUG: Headers incomplete, waiting for more data" << std::endl;
+		    _logger.tempOss << "Headers incomplete, waiting for more data";
+			_logger.debug();
 			return false;
 		}
 			
@@ -240,7 +258,8 @@ bool	HttpRequest::parseHeaders(void)
 		{
 			_buffer = _buffer.substr(2);
 			
-			std::cout << "DEBUG: End of headers found" << std::endl;
+			_logger.tempOss << "End of headers found";
+			_logger.debug();
 			
 			// Determine the next state based on headers
 			std::string transferEncoding = getHeader("Transfer-Encoding");
@@ -249,7 +268,8 @@ bool	HttpRequest::parseHeaders(void)
 				
 			if (transferEncoding.find("chunked") != std::string::npos)
 			{
-			    std::cout << "DEBUG: Found chunked encoding" << std::endl;
+			    _logger.tempOss << "Found chunked encoding";
+				_logger.debug();
 				_chunked = true;
 				_state = CHUNKED_SIZE;
 			}
@@ -259,13 +279,15 @@ bool	HttpRequest::parseHeaders(void)
 				if (!contentLengthStr.empty())
 				{
 					_contentLength = strtoul(contentLengthStr.c_str(), NULL, 10);
-					std::cout << "DEBUG: Content-Length: " << _contentLength << std::endl;
+					_logger.tempOss << "Content-Length: " << _contentLength;
+					_logger.debug();
 					_state = BODY;
 				}
 				else
 				{
 					// No content expected, request is complete
-					std::cout << "DEBUG: No body expected, request is complete" << std::endl;
+					_logger.tempOss << "No body expected, request is complete";
+					_logger.debug();
 					_state = COMPLETE;
 				}
 			}
@@ -276,12 +298,14 @@ bool	HttpRequest::parseHeaders(void)
 		std::string line = _buffer.substr(0, endPos);
 		_buffer = _buffer.substr(endPos + 2);
 		
-		std::cout << "DEBUG: Parsing header line: " << line << std::endl;
+		_logger.tempOss << "Parsing header line: " << line;
+		_logger.debug();
 		
 		size_t colonPos = line.find(':');
 		if (colonPos == std::string::npos)
 		{
-		    std::cout << "DEBUG: Invalid header line: " << line << std::endl;
+		    _logger.tempOss << "Invalid header line: " << line;
+			_logger.debug();
 			_state = ERROR;
 			return false;
 		}
@@ -301,7 +325,8 @@ bool	HttpRequest::parseHeaders(void)
 			value = "";
 		}
 		
-		std::cout << "DEBUG: Header: [" << name << "] = [" << value << "]" << std::endl;
+		_logger.tempOss << "Header: [" << name << "] = [" << value << "]";
+		_logger.debug();
 		_headers[name] = value;
 	}
 }
@@ -311,19 +336,22 @@ bool	HttpRequest::parseHeaders(void)
  */
 bool	HttpRequest::parseBody(void)
 {
-    std::cout << "DEBUG: Parsing body, have " << _buffer.size() 
-        << " bytes, need " << _contentLength << std::endl;
+    _logger.tempOss << "Parsing body, have " << _buffer.size() 
+        << " bytes, need " << _contentLength;
+		_logger.debug();
         
 	if (_buffer.size() >= _contentLength)
 	{
 		_body.append(_buffer.substr(0, _contentLength));
 		_buffer = _buffer.substr(_contentLength);
 		_state = COMPLETE;
-		std::cout << "DEBUG: Body complete with " << _body.size() << " bytes" << std::endl;
+		_logger.tempOss << "Body complete with " << _body.size() << " bytes";
+		_logger.debug();
 		return true;
 	}
 	
-	std::cout << "DEBUG: Body incomplete, waiting for more data" << std::endl;
+	_logger.tempOss << "Body incomplete, waiting for more data";
+	_logger.debug();
 	return false;
 }
 
@@ -336,7 +364,8 @@ bool	HttpRequest::parseChunkedSize(void)
 	
 	if (endPos == std::string::npos)
 	{
-	    std::cout << "DEBUG: Chunk size line incomplete" << std::endl;
+	    _logger.tempOss << "Chunk size line incomplete";
+		_logger.debug();
 		return false;
 	}
 		
@@ -347,12 +376,14 @@ bool	HttpRequest::parseChunkedSize(void)
 	char* endPtr;
 	_chunkSize = strtoul(line.c_str(), &endPtr, 16);
 	
-	std::cout << "DEBUG: Chunk size: " << _chunkSize << " bytes" << std::endl;
+	_logger.tempOss << "Chunk size: " << _chunkSize << " bytes";
+	_logger.debug();
 	
 	if (_chunkSize == 0)
 	{
 		// Final chunk, look for trailing headers (not implemented)
-		std::cout << "DEBUG: Final chunk (size 0) received" << std::endl;
+		_logger.tempOss << "Final chunk (size 0) received";
+		_logger.debug();
 		_state = CHUNKED_END;
 	}
 	else
@@ -368,8 +399,9 @@ bool	HttpRequest::parseChunkedSize(void)
  */
 bool	HttpRequest::parseChunkedData(void)
 {
-    std::cout << "DEBUG: Parsing chunk data, have " << _buffer.size() 
-        << " bytes, need " << _chunkSize + 2 << std::endl;
+    _logger.tempOss << "Parsing chunk data, have " << _buffer.size() 
+        << " bytes, need " << _chunkSize + 2;
+		_logger.debug();
         
 	if (_buffer.size() >= _chunkSize + 2)  // +2 for CRLF
 	{
@@ -377,12 +409,14 @@ bool	HttpRequest::parseChunkedData(void)
 		_buffer = _buffer.substr(_chunkSize + 2);  // Skip CRLF
 		_state = CHUNKED_SIZE;
 		
-		std::cout << "DEBUG: Chunk data complete, body now " 
-		    << _body.size() << " bytes" << std::endl;
+		_logger.tempOss << "Chunk data complete, body now " 
+		    << _body.size() << " bytes";
+		_logger.debug();
 		return true;
 	}
 	
-	std::cout << "DEBUG: Chunk data incomplete, waiting for more data" << std::endl;
+	_logger.tempOss << "Chunk data incomplete, waiting for more data";
+	_logger.debug();
 	return false;
 }
 
@@ -391,8 +425,9 @@ bool	HttpRequest::parseChunkedData(void)
  */
 HttpResponse	HttpRequest::process(const Config& config)
 {
-    std::cout << "DEBUG: Processing request: " << _method << " " 
-        << _uri << " " << _httpVersion << std::endl;
+    _logger.tempOss << "Processing request: " << _method << " " 
+        << _uri << " " << _httpVersion;
+		_logger.debug();
     
 	HttpResponse response;
 	
@@ -400,14 +435,16 @@ HttpResponse	HttpRequest::process(const Config& config)
 	std::string host = getHeader("Host");
 	int port = 80;  // Default
 	
-	std::cout << "DEBUG: Host header: " << host << std::endl;
+	_logger.tempOss << "Host header: " << host;
+	_logger.debug();
 	
 	size_t colonPos = host.find(':');
 	if (colonPos != std::string::npos)
 	{
 		port = atoi(host.substr(colonPos + 1).c_str());
 		host = host.substr(0, colonPos);
-		std::cout << "DEBUG: Extracted host=" << host << ", port=" << port << std::endl;
+		_logger.tempOss << "Extracted host=" << host << ", port=" << port;
+		_logger.debug();
 	}
 	
 	// Find the appropriate server configuration
@@ -415,34 +452,39 @@ HttpResponse	HttpRequest::process(const Config& config)
 	
 	if (!server)
 	{
-	    std::cout << "DEBUG: No matching server configuration found" << std::endl;
+	    _logger.tempOss << "No matching server configuration found";
+		_logger.debug();
 		response.setStatus(404);
 		response.setBody(config.getDefaultErrorPage(404));
 		return response;
 	}
 	
-	std::cout << "DEBUG: Found matching server for " << host 
-	    << ":" << port << std::endl;
+	_logger.tempOss << "Found matching server for " << host 
+	    << ":" << port;
+		_logger.debug();
 	
 	// Find the appropriate location configuration
 	const LocationConfig* location = findLocation(*server);
 	
 	if (!location)
 	{
-	    std::cout << "DEBUG: No matching location configuration found for " 
-	        << _path << std::endl;
+	    _logger.tempOss << "No matching location configuration found for " 
+	        << _path;
+		_logger.debug();
 		response.setStatus(404);
 		response.setBody(config.getDefaultErrorPage(404));
 		return response;
 	}
 	
-	std::cout << "DEBUG: Found matching location: " << location->path << std::endl;
+	_logger.tempOss << "Found matching location: " << location->path;
+	_logger.debug();
 	
 	// Check if method is allowed
 	if (!location->allowedMethods.empty() && 
 		location->allowedMethods.find(_method) == location->allowedMethods.end())
 	{
-	    std::cout << "DEBUG: Method " << _method << " not allowed" << std::endl;
+	    _logger.tempOss << "Method " << _method << " not allowed";
+		_logger.debug();
 		response.setStatus(405);
 		response.setBody(config.getDefaultErrorPage(405));
 		return response;
@@ -451,7 +493,8 @@ HttpResponse	HttpRequest::process(const Config& config)
 	// Handle redirections
 	if (!location->redirect.empty())
 	{
-	    std::cout << "DEBUG: Redirecting to " << location->redirect << std::endl;
+	    _logger.tempOss << "Redirecting to " << location->redirect;
+		_logger.debug();
 		response.setStatus(301);
 		response.addHeader("Location", location->redirect);
 		return response;
@@ -472,7 +515,8 @@ HttpResponse	HttpRequest::process(const Config& config)
 	}
 	else
 	{
-		std::cout << "DEBUG: Unsupported method " << _method << std::endl;
+		_logger.tempOss << "Unsupported method " << _method;
+		_logger.debug();
 		response.setStatus(501);
 		response.setBody(config.getDefaultErrorPage(501));
 		return response;
@@ -566,15 +610,16 @@ const std::string&	HttpRequest::getBody(void) const
 HttpResponse	HttpRequest::handleGet(const LocationConfig& location, 
 	HttpResponse& response, const Config& config)
 {
-	std::cout << "DEBUG: Handling GET request for " << _path << std::endl;
-	
+	_logger.tempOss << "Handling GET request for " << _path;
+	_logger.debug();
 	// Build the full file path
 	std::string fullPath = location.root + _path;
 	
 	// Check for path traversal attacks
 	if (!isPathSafe(_path, location.root))
 	{
-		std::cout << "DEBUG: Path traversal detected: " << _path << std::endl;
+		_logger.tempOss << "Path traversal detected: " << _path;
+		_logger.debug();
 		response.setStatus(403);
 		response.setBody(config.getDefaultErrorPage(403));
 		return response;
@@ -583,7 +628,8 @@ HttpResponse	HttpRequest::handleGet(const LocationConfig& location,
 	// Check if this is a CGI request
 	if (CgiHandler::isCgiFile(fullPath, location))
 	{
-		std::cout << "DEBUG: Detected CGI file, delegating to CGI handler" << std::endl;
+		_logger.tempOss << "Detected CGI file, delegating to CGI handler";
+		_logger.debug();
 		return handleCgi(location, response, config);
 	}
 	
@@ -605,7 +651,8 @@ HttpResponse	HttpRequest::handleGet(const LocationConfig& location,
 	
 	if (!file.is_open())
 	{
-		std::cout << "DEBUG: File not found: " << fullPath << std::endl;
+		_logger.tempOss << "File not found: " << fullPath;
+		_logger.debug();
 		
 		// If autoindex is enabled and it's a directory, show directory listing
 		if (location.autoindex && !_path.empty() && _path[_path.length() - 1] == '/')
@@ -623,8 +670,9 @@ HttpResponse	HttpRequest::handleGet(const LocationConfig& location,
 	                   std::istreambuf_iterator<char>());
 	file.close();
 	
-	std::cout << "DEBUG: Successfully read " << content.size() 
-	    << " bytes from " << fullPath << std::endl;
+	_logger.tempOss << "Successfully read " << content.size() 
+	    << " bytes from " << fullPath;
+		_logger.debug();
 	
 	// Set response
 	response.setStatus(200);
@@ -636,21 +684,23 @@ HttpResponse	HttpRequest::handleGet(const LocationConfig& location,
 
 HttpResponse HttpRequest::handlePost(LocationConfig const &location, 
 	HttpResponse& response, Config const &config) {
-	std::cout << "DEBUG: Handling POST request for " << _path << std::endl;
+	_logger.tempOss << "Handling POST request for " << _path;
+	_logger.debug();
 	
 	// Build the full file path to check for CGI
 	std::string fullPath = location.root + _path;
 	
 	// Check if this is a CGI request
 	if (CgiHandler::isCgiFile(fullPath, location)) {
-		std::cout << "DEBUG: Detected CGI file, delegating to CGI handler" << 
-		std::endl;
+		_logger.tempOss << "Detected CGI file, delegating to CGI handler";
+		_logger.debug();
 		return handleCgi(location, response, config);
 	}
 	
 	// Check if upload is allowed for this location
 	if (location.uploadStore.empty()) {
-		std::cout << "DEBUG: Upload not allowed for this location" << std::endl;
+		_logger.tempOss << "Upload not allowed for this location";
+		_logger.debug();
 		response.setStatus(403);
 		response.setBody(config.getDefaultErrorPage(403));
 		return response;
@@ -675,8 +725,9 @@ HttpResponse HttpRequest::handlePost(LocationConfig const &location,
 		
 		std::ofstream file(uploadPath.c_str(), std::ios::binary);
 		if (!file.is_open()) {
-			std::cout << "DEBUG: Failed to create upload file: " << 
-			uploadPath << std::endl;
+			_logger.tempOss << "Failed to create upload file: " << 
+			uploadPath;
+			_logger.debug();
 			response.setStatus(500);
 			response.setBody(config.getDefaultErrorPage(500));
 			return response;
@@ -685,8 +736,9 @@ HttpResponse HttpRequest::handlePost(LocationConfig const &location,
 		file.write(_body.c_str(), _body.size());
 		file.close();
 		
-		std::cout << "DEBUG: Successfully uploaded " << _body.size() 
-		    << " bytes to " << uploadPath << std::endl;
+		_logger.tempOss << "Successfully uploaded " << _body.size() 
+		    << " bytes to " << uploadPath;
+			_logger.debug();
 		
 		response.setStatus(303);
 		response.addHeader("Location", "/successupload.html");
@@ -701,7 +753,8 @@ HttpResponse HttpRequest::handlePost(LocationConfig const &location,
 HttpResponse	HttpRequest::handleDelete(const LocationConfig& location, 
 	HttpResponse& response, const Config& config)
 {
-	std::cout << "DEBUG: Handling DELETE request for " << _path << std::endl;
+	_logger.tempOss << "Handling DELETE request for " << _path;
+	_logger.debug();
 	
 	// Build the full file path
 	std::string fullPath = location.root + _path;
@@ -709,7 +762,8 @@ HttpResponse	HttpRequest::handleDelete(const LocationConfig& location,
 	// Check for path traversal attacks
 	if (!isPathSafe(_path, location.root))
 	{
-		std::cout << "DEBUG: Path traversal detected: " << _path << std::endl;
+		_logger.tempOss << "Path traversal detected: " << _path;
+		_logger.debug();
 		response.setStatus(403);
 		response.setBody(config.getDefaultErrorPage(403));
 		return response;
@@ -719,7 +773,8 @@ HttpResponse	HttpRequest::handleDelete(const LocationConfig& location,
 	std::ifstream file(fullPath.c_str());
 	if (!file.good())
 	{
-		std::cout << "DEBUG: File not found for deletion: " << fullPath << std::endl;
+		_logger.tempOss << "File not found for deletion: " << fullPath;
+		_logger.debug();
 		response.setStatus(404);
 		response.setBody(config.getDefaultErrorPage(404));
 		return response;
@@ -729,13 +784,15 @@ HttpResponse	HttpRequest::handleDelete(const LocationConfig& location,
 	// Try to delete the file
 	if (std::remove(fullPath.c_str()) != 0)
 	{
-		std::cout << "DEBUG: Failed to delete file: " << fullPath << std::endl;
+		_logger.tempOss << "Failed to delete file: " << fullPath;
+		_logger.debug();
 		response.setStatus(500);
 		response.setBody(config.getDefaultErrorPage(500));
 		return response;
 	}
 	
-	std::cout << "DEBUG: Successfully deleted file: " << fullPath << std::endl;
+	_logger.tempOss << "Successfully deleted file: " << fullPath;
+	_logger.debug();
 	
 	response.setStatus(204); // No Content
 	return response;
@@ -818,14 +875,16 @@ bool	HttpRequest::isPathSafe(const std::string& path, const std::string& root) c
 HttpResponse	HttpRequest::generateDirectoryListing(const LocationConfig& location, 
 	HttpResponse& response)
 {
-	std::cout << "DEBUG: Generating directory listing for " << _path << std::endl;
+	_logger.tempOss << "Generating directory listing for " << _path;
+	_logger.debug();
 	
 	std::string dirPath = location.root + _path;
 	DIR* dir = opendir(dirPath.c_str());
 	
 	if (!dir)
 	{
-		std::cout << "DEBUG: Failed to open directory: " << dirPath << std::endl;
+		_logger.tempOss << "Failed to open directory: " << dirPath;
+		_logger.debug();
 		response.setStatus(403);
 		return response;
 	}
@@ -879,7 +938,8 @@ HttpResponse	HttpRequest::generateDirectoryListing(const LocationConfig& locatio
 HttpResponse	HttpRequest::handleFileUpload(const LocationConfig& location, 
 	HttpResponse& response, const Config& config)
 {
-	std::cout << "DEBUG: Handling multipart file upload" << std::endl;
+	_logger.tempOss << "Handling multipart file upload";
+	_logger.debug();
 	
 	// Parse boundary from Content-Type header
 	std::string contentType = getHeader("Content-Type");
@@ -887,14 +947,16 @@ HttpResponse	HttpRequest::handleFileUpload(const LocationConfig& location,
 	
 	if (boundaryPos == std::string::npos)
 	{
-		std::cout << "DEBUG: No boundary found in multipart data" << std::endl;
+		_logger.tempOss << "No boundary found in multipart data";
+		_logger.debug();
 		response.setStatus(400);
 		response.setBody(config.getDefaultErrorPage(400));
 		return response;
 	}
 	
 	std::string boundary = "--" + contentType.substr(boundaryPos + 9);
-	std::cout << "DEBUG: Using boundary: " << boundary << std::endl;
+	_logger.tempOss << "Using boundary: " << boundary;
+	_logger.debug();
 	
 	// Simple multipart parsing - find file content between boundaries
 	size_t startPos = _body.find(boundary);
@@ -942,7 +1004,8 @@ HttpResponse	HttpRequest::handleFileUpload(const LocationConfig& location,
 	
 	if (!file.is_open())
 	{
-		std::cout << "DEBUG: Failed to create upload file: " << uploadPath << std::endl;
+		_logger.tempOss << "Failed to create upload file: " << uploadPath ;
+		_logger.debug();
 		response.setStatus(500);
 		response.setBody(config.getDefaultErrorPage(500));
 		return response;
@@ -951,8 +1014,9 @@ HttpResponse	HttpRequest::handleFileUpload(const LocationConfig& location,
 	file.write(fileContent.c_str(), fileContent.size());
 	file.close();
 	
-	std::cout << "DEBUG: Successfully uploaded " << fileContent.size() 
-	    << " bytes to " << uploadPath << std::endl;
+	_logger.tempOss << "Successfully uploaded " << fileContent.size() 
+	    << " bytes to " << uploadPath;
+		_logger.debug();
 	
 	response.setStatus(201);
 	std::ostringstream sizeOss;
@@ -967,7 +1031,8 @@ HttpResponse	HttpRequest::handleFileUpload(const LocationConfig& location,
 }
 
 HttpResponse HttpRequest::handleFormData(HttpResponse &response) {
-	std::cout << "DEBUG: Handling form data" << std::endl;
+	_logger.tempOss << "Handling form data";
+	_logger.debug();
 	
 	response.setStatus(200);
 	response.setBody(
@@ -999,7 +1064,8 @@ HttpResponse	HttpRequest::handleCgi(const LocationConfig& location,
 {
 	(void)config; // May be used for additional configuration
 	
-	std::cout << "DEBUG: Handling CGI request for " << _path << std::endl;
+	_logger.tempOss << "Handling CGI request for " << _path;
+	_logger.debug();
 	
 	// Build the full script path
 	std::string scriptPath = location.root + _path;
@@ -1007,7 +1073,8 @@ HttpResponse	HttpRequest::handleCgi(const LocationConfig& location,
 	// Check for path traversal attacks
 	if (!isPathSafe(_path, location.root))
 	{
-		std::cout << "DEBUG: Path traversal detected: " << _path << std::endl;
+		_logger.tempOss << "Path traversal detected: " << _path;
+		_logger.debug();
 		response.setStatus(403);
 		response.setBody("Forbidden: Path traversal detected");
 		return response;
@@ -1016,7 +1083,8 @@ HttpResponse	HttpRequest::handleCgi(const LocationConfig& location,
 	// Check if it's a CGI file
 	if (!CgiHandler::isCgiFile(scriptPath, location))
 	{
-		std::cout << "DEBUG: File is not a CGI script: " << scriptPath << std::endl;
+		_logger.tempOss << "File is not a CGI script: " << scriptPath;
+		_logger.debug();
 		response.setStatus(403);
 		response.setBody("Forbidden: Not a CGI script");
 		return response;

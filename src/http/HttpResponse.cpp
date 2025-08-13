@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 14:20:15 by josfelip          #+#    #+#             */
-/*   Updated: 2025/04/02 20:38:52 by josfelip         ###   ########.fr       */
+/*   Updated: 2025/08/09 16:22:29 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,9 +118,8 @@ std::string	HttpResponse::getStatusText(int statusCode)
  */
 void	HttpResponse::generateRawResponse(void)
 {
-    std::cout << "DEBUG: Generating raw response for status " 
-        << _statusCode << std::endl;
-        
+    _logger.tempOss << "Generating raw response for status " << _statusCode;
+		_logger.debug();
 	std::ostringstream oss;
 	
 	// Status line
@@ -151,8 +150,8 @@ void	HttpResponse::generateRawResponse(void)
 	for (std::map<std::string, std::string>::const_iterator it = _headers.begin();
 		it != _headers.end(); ++it)
 	{
-	    std::cout << "DEBUG: Adding header: " << it->first << ": " 
-	        << it->second << std::endl;
+	    _logger.tempOss << "Adding header: " << it->first << ": " << it->second;
+			_logger.debug();
 		oss << it->first << ": " << it->second << "\r\n";
 	}
 	
@@ -162,8 +161,8 @@ void	HttpResponse::generateRawResponse(void)
 	// Add body
 	if (!_body.empty())
 	{
-	    std::cout << "DEBUG: Adding body of " << _body.length() 
-	        << " bytes" << std::endl;
+	    _logger.tempOss << "Adding body of " << _body.length() << " bytes";
+		_logger.debug();
 		oss << _body;
 	}
 	
@@ -172,11 +171,12 @@ void	HttpResponse::generateRawResponse(void)
 	// Debug output - show the first part of the response
 	std::string firstPart = _rawResponse.substr(0, std::min(_rawResponse.length(), 
 	    static_cast<size_t>(200)));
-	std::cout << "DEBUG: Raw response (" << _rawResponse.length() 
+	_logger.tempOss << "Raw response (" << _rawResponse.length() 
 	    << " bytes):\n" << firstPart;
+		_logger.debug();
 	if (_rawResponse.length() > 200)
-	    std::cout << "...";
-	std::cout << std::endl;
+	    _logger.tempOss << "...";
+		_logger.debug();
 }
 
 /**
@@ -199,8 +199,8 @@ void	HttpResponse::setStatus(int statusCode)
 {
 	_statusCode = statusCode;
 	_statusText = getStatusText(statusCode);
-	std::cout << "DEBUG: Response status set to " << _statusCode 
-	    << " " << _statusText << std::endl;
+	_logger.tempOss << "Response status set to " << _statusCode << " " << _statusText;
+	_logger.debug();
 }
 
 /**
@@ -208,7 +208,8 @@ void	HttpResponse::setStatus(int statusCode)
  */
 void	HttpResponse::addHeader(const std::string& name, const std::string& value)
 {
-    std::cout << "DEBUG: Adding header: " << name << ": " << value << std::endl;
+    _logger.tempOss << "Adding header: " << name << ": " << value;
+	_logger.debug();
 	_headers[name] = value;
 }
 
@@ -217,8 +218,9 @@ void	HttpResponse::addHeader(const std::string& name, const std::string& value)
  */
 void	HttpResponse::setBody(const std::string& body)
 {
-    std::cout << "DEBUG: Setting body with " << body.length() 
-        << " bytes" << std::endl;
+    _logger.tempOss << "Setting body with " << body.length() 
+        << " bytes";
+	_logger.debug();
 	_body = body;
 }
 
@@ -227,8 +229,9 @@ void	HttpResponse::setBody(const std::string& body)
  */
 void	HttpResponse::setKeepAlive(bool keepAlive)
 {
-    std::cout << "DEBUG: Setting keepAlive to " 
-        << (keepAlive ? "true" : "false") << std::endl;
+    _logger.tempOss << "Setting keepAlive to " 
+        << (keepAlive ? "true" : "false");
+	_logger.debug();
 	_keepAlive = keepAlive;
 }
 
@@ -249,7 +252,8 @@ bool	HttpResponse::send(Socket& clientSocket)
 	// Generate raw response if not already done
 	if (_rawResponse.empty())
 	{
-	    std::cout << "DEBUG: No raw response yet, generating now" << std::endl;
+	    _logger.tempOss << "No raw response yet, generating now";
+		_logger.debug();
 		generateRawResponse();
 	}
 		
@@ -258,11 +262,13 @@ bool	HttpResponse::send(Socket& clientSocket)
 	
 	if (remaining == 0)
 	{
-	    std::cout << "DEBUG: No bytes remaining to send, response complete" << std::endl;
+	    _logger.tempOss << "No bytes remaining to send, response complete";
+		_logger.debug();
 		return true;
 	}
 	
-	std::cout << "DEBUG: Sending " << remaining << " remaining bytes" << std::endl;
+	_logger.tempOss << "Sending " << remaining << " remaining bytes";
+	_logger.debug();
 		
 	// Try to send the remaining data
 	ssize_t bytesSent = clientSocket.send(_rawResponse.c_str() + _bytesSent, 
@@ -270,20 +276,23 @@ bool	HttpResponse::send(Socket& clientSocket)
 		
 	if (bytesSent < 0)
 	{
-	    std::cout << "DEBUG: Send failed with error: " 
-	        << strerror(errno) << std::endl;
+	    _logger.tempOss << "Send failed with error: " 
+	        << strerror(errno);
+			_logger.error();
 		throw std::runtime_error("Failed to send response: " + 
 		    std::string(strerror(errno)));
 	}
 	
-	std::cout << "DEBUG: Successfully sent " << bytesSent << " bytes" << std::endl;
+	_logger.tempOss << "Successfully sent " << bytesSent << " bytes";
+	_logger.debug();
 	_bytesSent += bytesSent;
 	
 	// Check if we've sent everything
 	bool complete = (_bytesSent == _rawResponse.length());
-	std::cout << "DEBUG: Response sending is " 
+	_logger.tempOss << "Response sending is " 
 	    << (complete ? "complete" : "incomplete") 
-	    << " (" << _bytesSent << "/" << _rawResponse.length() << " bytes)" << std::endl;
+	    << " (" << _bytesSent << "/" << _rawResponse.length() << " bytes)";
+		_logger.debug();
 	
 	return complete;
 }
