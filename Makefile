@@ -6,7 +6,7 @@
 #    By: josfelip <josfelip@student.42sp.org.br>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/03/24 12:00:00 by josfelip          #+#    #+#              #
-#    Updated: 2025/03/26 11:44:35 by josfelip         ###   ########.fr        #
+#    Updated: 2025/08/21 11:18:43 by josfelip         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,9 +14,9 @@ NAME = webserv
 
 # Compiler and flags
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98 
 DEPFLAGS = -MMD -MP
-DBGFLAGS = -g3
+DBGFLAGS = -g3 -D LOG_LEVEL=LOG_DEBUG
 
 # Directories
 SRC_DIR = src
