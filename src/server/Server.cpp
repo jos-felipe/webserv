@@ -210,11 +210,21 @@ void	Server::handleRequests(fd_set *readFdsReady)
 				}
 				else
 				{
-					// Connection was closed or error occurred
-					_logger.tempOss << "Connection closed or error on fd " << clientFd 
-						<< ", marking for removal";
-                        _logger.debug();
-					toRemove.push_back(clientFd);
+					// Check if it's a real connection error or just incomplete request
+					if (request.hasConnectionError())
+					{
+						_logger.tempOss << "Connection error on fd " << clientFd 
+							<< ", marking for removal";
+						_logger.debug();
+						toRemove.push_back(clientFd);
+					}
+					else
+					{
+						_logger.tempOss << "Request on fd " << clientFd 
+							<< " incomplete, waiting for more data";
+						_logger.debug();
+						// Keep connection open for more data
+					}
 				}
 			}
 			catch (const std::exception& e)

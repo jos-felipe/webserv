@@ -28,7 +28,7 @@
  * Constructor initializes parsing state
  */
 HttpRequest::HttpRequest(void) : _state(REQUEST_LINE), _contentLength(0), 
-	_chunkSize(0), _chunked(false)
+	_chunkSize(0), _chunked(false), _connectionError(false)
 {
 }
 
@@ -47,7 +47,8 @@ HttpRequest::HttpRequest(const HttpRequest& other) :
 	_buffer(other._buffer),
 	_contentLength(other._contentLength),
 	_chunkSize(other._chunkSize),
-	_chunked(other._chunked)
+	_chunked(other._chunked),
+	_connectionError(other._connectionError)
 {
 }
 
@@ -77,6 +78,7 @@ HttpRequest&	HttpRequest::operator=(const HttpRequest& other)
 		_contentLength = other._contentLength;
 		_chunkSize = other._chunkSize;
 		_chunked = other._chunked;
+		_connectionError = other._connectionError;
 	}
 	return *this;
 }
@@ -100,13 +102,33 @@ bool	HttpRequest::read(Socket& clientSocket)
 	{
 	    if (bytesRead == 0)
 		{
-			_logger.tempOss << "Client closed connection";
-			_logger.debug();
+			// In non-blocking I/O, recv() returning 0 can mean either:
+			// 1. Client actually closed connection 
+			// 2. No data available right now (EAGAIN/EWOULDBLOCK)
+			// 
+			// If we haven't started parsing yet, or if we're complete/error, 
+			// then 0 bytes likely means connection closed.
+			// But if we're in the middle of reading body data, it might just
+			// mean no more data available right now.
+			if (_state == REQUEST_LINE || _state == COMPLETE || _state == ERROR)
+			{
+				_logger.tempOss << "Client closed connection";
+				_logger.debug();
+				_connectionError = true;
+			}
+			else
+			{
+				// We're in the middle of parsing, this might just be no data available
+				_logger.tempOss << "No more data available, request incomplete";
+				_logger.debug();
+				// Don't set _connectionError - let server keep connection for more data
+			}
 		}
 	    else
 		{
 			_logger.tempOss << "Error reading from socket: " << strerror(errno);
 			_logger.error();
+			_connectionError = true;
 		}
 		return false;
 	}
@@ -771,6 +793,17 @@ HttpResponse HttpRequest::handlePost(LocationConfig const &location,
 	}
 	else {
 		// Simple file upload - treat body as raw file content
+		// Ensure upload directory exists
+		struct stat dirStat;
+		if (stat(location.uploadStore.c_str(), &dirStat) != 0 || !S_ISDIR(dirStat.st_mode))
+		{
+			_logger.tempOss << "Upload directory does not exist: " << location.uploadStore;
+			_logger.debug();
+			response.setStatus(500);
+			response.setBody(config.getDefaultErrorPage(500));
+			return response;
+		}
+		
 		std::ostringstream oss;
 		oss << "upload_" << time(NULL);
 		std::string filename = oss.str();
@@ -794,7 +827,8 @@ HttpResponse HttpRequest::handlePost(LocationConfig const &location,
 			_logger.debug();
 		
 		response.setStatus(303);
-		response.addHeader("Location", "/successupload.html");
+		response.addHeader("Location", "/sucessupload.html");
+		return response;
 	}
 	
 	return response;
@@ -1007,7 +1041,25 @@ HttpResponse	HttpRequest::handleFileUpload(const LocationConfig& location,
 		return response;
 	}
 	
-	std::string boundary = "--" + contentType.substr(boundaryPos + 9);
+	// Extract boundary, handling quotes if present
+	std::string boundaryValue = contentType.substr(boundaryPos + 9);
+	if (!boundaryValue.empty() && boundaryValue[0] == '"')
+	{
+		size_t endQuote = boundaryValue.find('"', 1);
+		if (endQuote != std::string::npos)
+			boundaryValue = boundaryValue.substr(1, endQuote - 1);
+		else
+			boundaryValue = boundaryValue.substr(1);
+	}
+	else
+	{
+		// Remove any trailing semicolon or other parameters
+		size_t semicolon = boundaryValue.find(';');
+		if (semicolon != std::string::npos)
+			boundaryValue = boundaryValue.substr(0, semicolon);
+	}
+	
+	std::string boundary = "--" + boundaryValue;
 	_logger.tempOss << "Using boundary: " << boundary;
 	_logger.debug();
 	
@@ -1020,19 +1072,51 @@ HttpResponse	HttpRequest::handleFileUpload(const LocationConfig& location,
 		return response;
 	}
 	
-	// Find filename in headers
-	size_t filenamePos = _body.find("filename=\"", startPos);
+	// Find filename in headers - more robust parsing
 	std::string filename = "uploaded_file";
+	size_t filenamePos = _body.find("filename=", startPos);
 	
 	if (filenamePos != std::string::npos)
 	{
-		size_t filenameStart = filenamePos + 10;
-		size_t filenameEnd = _body.find("\"", filenameStart);
-		if (filenameEnd != std::string::npos)
+		size_t filenameStart = filenamePos + 9;
+		char delimiter = '"';
+		
+		// Check if filename is quoted
+		if (filenameStart < _body.length() && _body[filenameStart] == '"')
+		{
+			filenameStart++;
+			delimiter = '"';
+		}
+		else
+		{
+			// Unquoted filename, delimiter is space, semicolon or CRLF
+			delimiter = ' ';
+		}
+		
+		size_t filenameEnd = _body.find(delimiter, filenameStart);
+		if (delimiter == ' ')
+		{
+			// For unquoted, also check for semicolon and CRLF
+			size_t semicolonPos = _body.find(';', filenameStart);
+			size_t crlfPos = _body.find("\r\n", filenameStart);
+			
+			filenameEnd = filenameEnd < semicolonPos ? filenameEnd : semicolonPos;
+			filenameEnd = filenameEnd < crlfPos ? filenameEnd : crlfPos;
+		}
+		
+		if (filenameEnd != std::string::npos && filenameEnd > filenameStart)
 		{
 			filename = _body.substr(filenameStart, filenameEnd - filenameStart);
+			// Remove any path information for security
+			size_t lastSlash = filename.find_last_of("/\\");
+			if (lastSlash != std::string::npos)
+				filename = filename.substr(lastSlash + 1);
 		}
 	}
+	
+	// Ensure filename is safe
+	if (filename.empty() || filename == "." || filename == "..")
+		filename = "uploaded_file";
 	
 	// Find file content (after double CRLF)
 	size_t contentStart = _body.find("\r\n\r\n", startPos);
@@ -1050,6 +1134,17 @@ HttpResponse	HttpRequest::handleFileUpload(const LocationConfig& location,
 		contentEnd = _body.length();
 	
 	std::string fileContent = _body.substr(contentStart, contentEnd - contentStart);
+	
+	// Ensure upload directory exists
+	struct stat dirStat;
+	if (stat(location.uploadStore.c_str(), &dirStat) != 0 || !S_ISDIR(dirStat.st_mode))
+	{
+		_logger.tempOss << "Upload directory does not exist: " << location.uploadStore;
+		_logger.debug();
+		response.setStatus(500);
+		response.setBody(config.getDefaultErrorPage(500));
+		return response;
+	}
 	
 	// Save file
 	std::string uploadPath = location.uploadStore + "/" + filename;
@@ -1071,14 +1166,8 @@ HttpResponse	HttpRequest::handleFileUpload(const LocationConfig& location,
 	    << " bytes to " << uploadPath;
 		_logger.debug();
 	
-	response.setStatus(201);
-	std::ostringstream sizeOss;
-	sizeOss << fileContent.size();
-	response.setBody("<html><body><h1>File Upload Successful</h1>"
-	                "<p>Filename: " + filename + "</p>"
-	                "<p>Size: " + sizeOss.str() + " bytes</p>"
-	                "</body></html>");
-	response.addHeader("Content-Type", "text/html");
+	response.setStatus(303);
+	response.addHeader("Location", "/sucessupload.html");
 	
 	return response;
 }
@@ -1146,4 +1235,12 @@ HttpResponse	HttpRequest::handleCgi(const LocationConfig& location,
 	// Use CgiHandler to execute the script
 	CgiHandler cgiHandler;
 	return cgiHandler.handleCgiRequest(*this, location, scriptPath);
+}
+
+/**
+ * Check if there was a connection error (should close connection)
+ */
+bool	HttpRequest::hasConnectionError(void) const
+{
+	return _connectionError;
 }

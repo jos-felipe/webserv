@@ -61,6 +61,7 @@ private:
 	size_t								_contentLength;
 	size_t								_chunkSize;
 	bool								_chunked;
+	bool								_connectionError;
 	Logger								_logger;
 	
 	/**
@@ -200,6 +201,11 @@ public:
 	 * Get the request body
 	 */
 	const std::string&					getBody(void) const;
+	
+	/**
+	 * Check if there was a connection error (should close connection)
+	 */
+	bool								hasConnectionError(void) const;
 };
 
 #endif
