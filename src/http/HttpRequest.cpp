@@ -633,7 +633,66 @@ HttpResponse	HttpRequest::handleGet(const LocationConfig& location,
 		return handleCgi(location, response, config);
 	}
 	
-	// If path ends with '/', try to serve index file
+	// Check if the path is a directory
+	struct stat pathStat;
+	bool isDirectory = (stat(fullPath.c_str(), &pathStat) == 0 && S_ISDIR(pathStat.st_mode));
+	
+	if (isDirectory)
+	{
+		// If path doesn't end with '/', redirect to add trailing slash
+		if (!_path.empty() && _path[_path.length() - 1] != '/')
+		{
+			response.setStatus(301);
+			response.addHeader("Location", _path + "/");
+			return response;
+		}
+		
+		// Path ends with '/', try to serve index file first
+		std::string indexPath = fullPath;
+		if (!location.index.empty())
+		{
+			indexPath += location.index;
+		}
+		else
+		{
+			indexPath += "index.html";
+		}
+		
+		// Check if index file exists
+		std::ifstream indexFile(indexPath.c_str(), std::ios::binary);
+		if (indexFile.is_open())
+		{
+			// Serve the index file
+			std::string content((std::istreambuf_iterator<char>(indexFile)), 
+			                   std::istreambuf_iterator<char>());
+			indexFile.close();
+			
+			_logger.tempOss << "Successfully read " << content.size() 
+			    << " bytes from index file " << indexPath;
+			_logger.debug();
+			
+			response.setStatus(200);
+			response.setBody(content);
+			response.addHeader("Content-Type", getMimeType(indexPath));
+			return response;
+		}
+		
+		// No index file found, check if autoindex is enabled
+		if (location.autoindex)
+		{
+			return generateDirectoryListing(location, response);
+		}
+		else
+		{
+			// Directory exists but no index file and autoindex disabled
+			response.setStatus(403);
+			response.setBody(config.getDefaultErrorPage(403));
+			return response;
+		}
+	}
+	
+	// Not a directory, handle as regular file
+	// If path ends with '/', try to serve index file (shouldn't happen after directory check)
 	if (!_path.empty() && _path[_path.length() - 1] == '/')
 	{
 		if (!location.index.empty())
@@ -653,12 +712,6 @@ HttpResponse	HttpRequest::handleGet(const LocationConfig& location,
 	{
 		_logger.tempOss << "File not found: " << fullPath;
 		_logger.debug();
-		
-		// If autoindex is enabled and it's a directory, show directory listing
-		if (location.autoindex && !_path.empty() && _path[_path.length() - 1] == '/')
-		{
-			return generateDirectoryListing(location, response);
-		}
 		
 		response.setStatus(404);
 		response.setBody(config.getDefaultErrorPage(404));
