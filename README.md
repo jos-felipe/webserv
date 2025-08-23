@@ -122,7 +122,7 @@ server {
 - [x] Error handling
 - [x] CGI implementation
 - [x] File upload handling
-- [ ] Testing and documentation
+- [x] Testing and documentation
 
 ## 🧪 Testing
 The server can be tested using:
