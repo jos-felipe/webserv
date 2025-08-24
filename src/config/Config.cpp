@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: asanni <asanni@student.42sp.org.br>        +#+  +:+       +#+        */
+/*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:20:34 by josfelip          #+#    #+#             */
-/*   Updated: 2025/08/06 19:27:56 by asanni           ###   ########.fr       */
+/*   Updated: 2025/08/24 15:06:48 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -177,7 +177,6 @@ ServerConfig	Config::parseServerBlock(std::vector<std::string>& lines,
 				value *= 1024 * 1024;
 			else if (unit == 'G')
 				value *= 1024 * 1024 * 1024;
-				
 			server.clientMaxBodySize = value;
 		}
 		else if (tokens[0] == "location" && tokens.size() >= 3 
