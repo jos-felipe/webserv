@@ -229,8 +229,8 @@ LocationConfig	Config::parseLocationBlock(std::vector<std::string>& lines,
 		}
 		else if (tokens[0] == "autoindex" && tokens.size() >= 2)
 			location.autoindex = (tokens[1] == "on");
-		else if (tokens[0] == "return" && tokens.size() >= 2)
-			location.redirect = tokens[1];
+		else if (tokens[0] == "return" && tokens.size() >= 3)
+			location.redirect = tokens[2];
 		else if (tokens[0] == "upload_store" && tokens.size() >= 2)
 			location.uploadStore = tokens[1];
 		else if (tokens[0] == "cgi_pass" && tokens.size() >= 2)

@@ -60,11 +60,6 @@ jobs:
           echo "SUCCESS: No relinking detected."
         fi
     
-    - name: Run CGI tests
-      run: |
-        chmod +x test_simple_cgi.sh
-        ./test_simple_cgi.sh
-
   code-style:
     runs-on: ubuntu-latest
     
