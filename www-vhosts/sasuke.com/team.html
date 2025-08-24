@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team - Sasuke.com</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ Team Sasuke</h1>
+            <nav>
+                <a href="/">Home</a>
+                <a href="/team.html">Team</a>
+            </nav>
+        </header>
+        
+        <main>
+            <section>
+                <h2>Virtual Host Validation</h2>
+                <p>This page proves that <strong>sasuke.com</strong> serves different content than other virtual hosts.</p>
+                
+                <h3>Configuration Details:</h3>
+                <ul>
+                    <li><strong>Hostname:</strong> sasuke.com</li>
+                    <li><strong>Port:</strong> 3000</li>
+                    <li><strong>Document Root:</strong> ./www-vhosts/sasuke.com</li>
+                    <li><strong>Server Block:</strong> Third server in eval.conf</li>
+                </ul>
+                
+                <h3>Testing Methodology:</h3>
+                <p>Access via: <code>curl --resolve sasuke.com:3000:127.0.0.1 http://sasuke.com:3000/team.html</code></p>
+                
+                <p>This tests the server's ability to:</p>
+                <ul>
+                    <li>Handle multiple virtual hosts on the same port</li>
+                    <li>Serve distinct content trees per hostname</li>
+                    <li>Properly route requests based on Host header</li>
+                    <li>Maintain separate configurations per virtual host</li>
+                </ul>
+                
+                <div class="info">
+                    <h3>Expected Behavior:</h3>
+                    <p>Each virtual host should return its own unique content, demonstrating that the 
+                    <code>Config::findServer()</code> method correctly identifies and routes requests 
+                    to the appropriate server configuration.</p>
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            <p>Served by WebServ - Virtual Host: sasuke.com - Page: /team.html</p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - Naruto.com</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍜 About Naruto.com</h1>
+            <nav>
+                <a href="/">Home</a>
+                <a href="/about.html">About</a>
+            </nav>
+        </header>
+        
+        <main>
+            <section>
+                <h2>Virtual Host Testing</h2>
+                <p>This page demonstrates that virtual hosting is working correctly for <strong>naruto.com</strong>.</p>
+                
+                <h3>Technical Details:</h3>
+                <ul>
+                    <li><strong>Hostname:</strong> naruto.com</li>
+                    <li><strong>Port:</strong> 3000</li>
+                    <li><strong>Document Root:</strong> ./www-vhosts/naruto.com</li>
+                    <li><strong>Server Block:</strong> Second server in eval.conf</li>
+                </ul>
+                
+                <h3>What This Tests:</h3>
+                <p>When you access this page via <code>curl --resolve naruto.com:3000:127.0.0.1 http://naruto.com:3000/about.html</code>, 
+                the WebServ server uses the Host header to determine which server block should handle the request.</p>
+                
+                <p>The <code>Config::findServer()</code> method matches:</p>
+                <ol>
+                    <li>Port number (3000)</li>
+                    <li>Server name (naruto.com)</li>
+                    <li>Returns the appropriate ServerConfig</li>
+                </ol>
+            </section>
+        </main>
+        
+        <footer>
+            <p>Served by WebServ - Virtual Host: naruto.com - Page: /about.html</p>
+        </footer>
+    </div>
+</body>
+</html>

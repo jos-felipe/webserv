@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - WebServ Default Host</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🖥️ WebServ Administration</h1>
+            <nav>
+                <a href="/">Home</a>
+                <a href="/admin.html">Admin</a>
+            </nav>
+        </header>
+        
+        <main>
+            <section>
+                <h2>Default Virtual Host</h2>
+                <p>This page is served from the <strong>localhost</strong> default virtual host configuration.</p>
+                
+                <h3>Server Configuration:</h3>
+                <ul>
+                    <li><strong>Hostname:</strong> localhost</li>
+                    <li><strong>Port:</strong> 8080</li>
+                    <li><strong>Document Root:</strong> ./www-vhosts/localhost</li>
+                    <li><strong>Server Block:</strong> First server in eval.conf</li>
+                </ul>
+                
+                <h3>Testing Access:</h3>
+                <p>Access via: <code>curl http://localhost:8080/admin.html</code></p>
+                <p>Or: <code>curl --resolve localhost:8080:127.0.0.1 http://localhost:8080/admin.html</code></p>
+                
+                <h3>Default Host Purpose:</h3>
+                <p>This virtual host serves as the fallback when:</p>
+                <ul>
+                    <li>No specific server_name matches the request</li>
+                    <li>Direct IP access is used</li>
+                    <li>Invalid or missing Host headers</li>
+                    <li>Default administrative access is needed</li>
+                </ul>
+                
+                <div class="info">
+                    <h3>Virtual Host Resolution:</h3>
+                    <p>The server should properly distinguish between requests for different hostnames 
+                    even when they resolve to the same IP address, demonstrating proper virtual hosting implementation.</p>
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            <p>Served by WebServ - Virtual Host: localhost (default) - Page: /admin.html</p>
+        </footer>
+    </div>
+</body>
+</html>

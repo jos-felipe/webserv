@@ -1,0 +1,84 @@
+/* Sasuke.com Virtual Host Styles */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    color: #fff;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+header h1 {
+    margin: 0 0 10px 0;
+    color: #00d4ff;
+    font-size: 2.5em;
+    text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+
+nav a {
+    margin-right: 20px;
+    text-decoration: none;
+    color: #fff;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 5px;
+    transition: all 0.3s;
+    border: 1px solid transparent;
+}
+
+nav a:hover {
+    background: #00d4ff;
+    color: #1a1a2e;
+    border-color: #00d4ff;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+
+main {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 30px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.hero h2 {
+    color: #00d4ff;
+    font-size: 2em;
+    margin-bottom: 15px;
+    text-shadow: 0 0 5px rgba(0, 212, 255, 0.3);
+}
+
+.abilities ul {
+    list-style: none;
+    padding: 0;
+}
+
+.abilities li {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+footer {
+    text-align: center;
+    color: #00d4ff;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
