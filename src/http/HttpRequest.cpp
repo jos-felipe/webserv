@@ -6,7 +6,7 @@
 /*   By: asanni <asanni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/26 13:50:42 by josfelip          #+#    #+#             */
-/*   Updated: 2025/08/09 16:04:55 by asanni           ###   ########.fr       */
+/*   Updated: 2025/08/24 15:33:30 by asanni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1161,6 +1161,15 @@ HttpResponse	HttpRequest::handleFileUpload(const LocationConfig& location,
 	
 	file.write(fileContent.c_str(), fileContent.size());
 	file.close();
+
+	if (fileContent.size() > config.getServers()[0].clientMaxBodySize)
+	{
+		_logger.tempOss << "File too big: size (" << fileContent.size()  << ")";
+		_logger.error();
+		response.setStatus(500);
+		response.setBody(config.getDefaultErrorPage(500));
+		return response;
+	}
 	
 	_logger.tempOss << "Successfully uploaded " << fileContent.size() 
 	    << " bytes to " << uploadPath;
