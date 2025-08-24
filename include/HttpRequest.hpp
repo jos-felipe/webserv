@@ -62,6 +62,7 @@ private:
 	size_t								_chunkSize;
 	bool								_chunked;
 	bool								_connectionError;
+	const ServerConfig*					_serverConfig;
 	Logger								_logger;
 	
 	/**
@@ -206,6 +207,11 @@ public:
 	 * Check if there was a connection error (should close connection)
 	 */
 	bool								hasConnectionError(void) const;
+	
+	/**
+	 * Set server configuration for size validation during parsing
+	 */
+	void								setServerConfig(const ServerConfig* serverConfig);
 };
 
 #endif

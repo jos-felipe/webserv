@@ -28,7 +28,7 @@
  * Constructor initializes parsing state
  */
 HttpRequest::HttpRequest(void) : _state(REQUEST_LINE), _contentLength(0), 
-	_chunkSize(0), _chunked(false), _connectionError(false)
+	_chunkSize(0), _chunked(false), _connectionError(false), _serverConfig(NULL)
 {
 }
 
@@ -48,7 +48,8 @@ HttpRequest::HttpRequest(const HttpRequest& other) :
 	_contentLength(other._contentLength),
 	_chunkSize(other._chunkSize),
 	_chunked(other._chunked),
-	_connectionError(other._connectionError)
+	_connectionError(other._connectionError),
+	_serverConfig(other._serverConfig)
 {
 }
 
@@ -79,6 +80,7 @@ HttpRequest&	HttpRequest::operator=(const HttpRequest& other)
 		_chunkSize = other._chunkSize;
 		_chunked = other._chunked;
 		_connectionError = other._connectionError;
+		_serverConfig = other._serverConfig;
 	}
 	return *this;
 }
@@ -303,6 +305,17 @@ bool	HttpRequest::parseHeaders(void)
 					_contentLength = strtoul(contentLengthStr.c_str(), NULL, 10);
 					_logger.tempOss << "Content-Length: " << _contentLength;
 					_logger.debug();
+					
+					// Check against server's client_max_body_size limit
+					if (_serverConfig && _contentLength > _serverConfig->clientMaxBodySize)
+					{
+						_logger.tempOss << "Request body size " << _contentLength 
+							<< " exceeds server limit " << _serverConfig->clientMaxBodySize;
+						_logger.warning();
+						_state = ERROR;
+						return false;
+					}
+					
 					_state = BODY;
 				}
 				else
@@ -364,6 +377,17 @@ bool	HttpRequest::parseBody(void)
         
 	if (_buffer.size() >= _contentLength)
 	{
+		// Additional safety check: verify total body size won't exceed limit
+		size_t newBodySize = _body.size() + _contentLength;
+		if (_serverConfig && newBodySize > _serverConfig->clientMaxBodySize)
+		{
+			_logger.tempOss << "Total body size " << newBodySize 
+				<< " would exceed server limit " << _serverConfig->clientMaxBodySize;
+			_logger.warning();
+			_state = ERROR;
+			return false;
+		}
+		
 		_body.append(_buffer.substr(0, _contentLength));
 		_buffer = _buffer.substr(_contentLength);
 		_state = COMPLETE;
@@ -427,6 +451,17 @@ bool	HttpRequest::parseChunkedData(void)
         
 	if (_buffer.size() >= _chunkSize + 2)  // +2 for CRLF
 	{
+		// Check if adding this chunk would exceed size limit
+		size_t newBodySize = _body.size() + _chunkSize;
+		if (_serverConfig && newBodySize > _serverConfig->clientMaxBodySize)
+		{
+			_logger.tempOss << "Chunked body size " << newBodySize 
+				<< " would exceed server limit " << _serverConfig->clientMaxBodySize;
+			_logger.warning();
+			_state = ERROR;
+			return false;
+		}
+		
 		_body.append(_buffer.substr(0, _chunkSize));
 		_buffer = _buffer.substr(_chunkSize + 2);  // Skip CRLF
 		_state = CHUNKED_SIZE;
@@ -452,6 +487,16 @@ HttpResponse	HttpRequest::process(const Config& config)
 		_logger.debug();
     
 	HttpResponse response;
+	
+	// If request parsing failed (e.g., due to size limits), return 413 error
+	if (_state == ERROR)
+	{
+		_logger.tempOss << "Request in ERROR state, returning 413 Payload Too Large";
+		_logger.warning();
+		response.setStatus(413);
+		response.setBody(config.getDefaultErrorPage(413));
+		return response;
+	}
 	
 	// Extract host and port from Host header
 	std::string host = getHeader("Host");
@@ -1243,4 +1288,12 @@ HttpResponse	HttpRequest::handleCgi(const LocationConfig& location,
 bool	HttpRequest::hasConnectionError(void) const
 {
 	return _connectionError;
+}
+
+/**
+ * Set server configuration for size validation during parsing
+ */
+void	HttpRequest::setServerConfig(const ServerConfig* serverConfig)
+{
+	_serverConfig = serverConfig;
 }

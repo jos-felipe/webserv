@@ -184,6 +184,14 @@ void	Server::handleRequests(fd_set *readFdsReady)
                         << clientFd;
                         _logger.debug();
 					_requests[clientFd] = HttpRequest();
+					
+					// Set default server config for size validation during parsing
+					// Use the first available server config as default
+					const std::vector<ServerConfig>& servers = _config->getServers();
+					if (!servers.empty())
+					{
+						_requests[clientFd].setServerConfig(&servers[0]);
+					}
 				}
 					
 				HttpRequest& request = _requests[clientFd];
